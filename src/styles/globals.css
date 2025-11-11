@@ -1,0 +1,295 @@
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --font-size: 14px;
+  --background: #faf8f5;
+  --foreground: #2c1810;
+  --card: #ffffff;
+  --card-foreground: #2c1810;
+  --popover: #ffffff;
+  --popover-foreground: #2c1810;
+  --primary: #8b4513;
+  --primary-foreground: #faf8f5;
+  --secondary: #d2b48c;
+  --secondary-foreground: #2c1810;
+  --muted: #f5f2ed;
+  --muted-foreground: #6b5b4f;
+  --accent: #deb887;
+  --accent-foreground: #2c1810;
+  --destructive: #dc2626;
+  --destructive-foreground: #ffffff;
+  --border: rgba(139, 69, 19, 0.15);
+  --input: transparent;
+  --input-background: #f5f2ed;
+  --switch-background: #d2b48c;
+  --font-weight-medium: 500;
+  --font-weight-normal: 400;
+  --ring: #8b4513;
+  --chart-1: #8b4513;
+  --chart-2: #cd853f;
+  --chart-3: #deb887;
+  --chart-4: #f4a460;
+  --chart-5: #d2b48c;
+  --radius: 0.625rem;
+  --sidebar: #faf8f5;
+  --sidebar-foreground: #2c1810;
+  --sidebar-primary: #8b4513;
+  --sidebar-primary-foreground: #faf8f5;
+  --sidebar-accent: #f5f2ed;
+  --sidebar-accent-foreground: #2c1810;
+  --sidebar-border: rgba(139, 69, 19, 0.15);
+  --sidebar-ring: #8b4513;
+  
+  /* Coffee-specific custom colors */
+  --coffee-dark: #3c2414;
+  --coffee-medium: #8b4513;
+  --coffee-light: #cd853f;
+  --cream: #faf8f5;
+  --earth: #deb887;
+  --warm-brown: #a0522d;
+}
+
+.dark {
+  --background: #1a120c;
+  --foreground: #faf8f5;
+  --card: #2c1810;
+  --card-foreground: #faf8f5;
+  --popover: #2c1810;
+  --popover-foreground: #faf8f5;
+  --primary: #cd853f;
+  --primary-foreground: #1a120c;
+  --secondary: #3c2414;
+  --secondary-foreground: #faf8f5;
+  --muted: #3c2414;
+  --muted-foreground: #a0522d;
+  --accent: #8b4513;
+  --accent-foreground: #faf8f5;
+  --destructive: #dc2626;
+  --destructive-foreground: #faf8f5;
+  --border: rgba(205, 133, 63, 0.2);
+  --input: #3c2414;
+  --ring: #cd853f;
+  --font-weight-medium: 500;
+  --font-weight-normal: 400;
+  --chart-1: #cd853f;
+  --chart-2: #deb887;
+  --chart-3: #f4a460;
+  --chart-4: #d2b48c;
+  --chart-5: #8b4513;
+  --sidebar: #1a120c;
+  --sidebar-foreground: #faf8f5;
+  --sidebar-primary: #cd853f;
+  --sidebar-primary-foreground: #1a120c;
+  --sidebar-accent: #3c2414;
+  --sidebar-accent-foreground: #faf8f5;
+  --sidebar-border: rgba(205, 133, 63, 0.2);
+  --sidebar-ring: #cd853f;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-input-background: var(--input-background);
+  --color-switch-background: var(--switch-background);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  
+  /* Coffee-specific colors */
+  --color-coffee-dark: var(--coffee-dark);
+  --color-coffee-medium: var(--coffee-medium);
+  --color-coffee-light: var(--coffee-light);
+  --color-cream: var(--cream);
+  --color-earth: var(--earth);
+  --color-warm-brown: var(--warm-brown);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/**
+ * Base typography. This is not applied to elements which have an ancestor with a Tailwind text class.
+ */
+@layer base {
+  :where(:not(:has([class*=" text-"]), :not(:has([class^="text-"])))) {
+    h1 {
+      font-size: var(--text-2xl);
+      font-weight: var(--font-weight-medium);
+      line-height: 1.5;
+    }
+
+    h2 {
+      font-size: var(--text-xl);
+      font-weight: var(--font-weight-medium);
+      line-height: 1.5;
+    }
+
+    h3 {
+      font-size: var(--text-lg);
+      font-weight: var(--font-weight-medium);
+      line-height: 1.5;
+    }
+
+    h4 {
+      font-size: var(--text-base);
+      font-weight: var(--font-weight-medium);
+      line-height: 1.5;
+    }
+
+    p {
+      font-size: var(--text-base);
+      font-weight: var(--font-weight-normal);
+      line-height: 1.5;
+    }
+
+    label {
+      font-size: var(--text-base);
+      font-weight: var(--font-weight-medium);
+      line-height: 1.5;
+    }
+
+    button {
+      font-size: var(--text-base);
+      font-weight: var(--font-weight-medium);
+      line-height: 1.5;
+    }
+
+    input {
+      font-size: var(--text-base);
+      font-weight: var(--font-weight-normal);
+      line-height: 1.5;
+    }
+  }
+}
+
+html {
+  font-size: var(--font-size);
+}
+
+/* Coffee-themed utility classes */
+.coffee-gradient {
+  background: linear-gradient(135deg, var(--coffee-dark) 0%, var(--coffee-medium) 50%, var(--coffee-light) 100%);
+}
+
+.text-coffee-dark {
+  color: var(--coffee-dark);
+}
+
+.text-coffee-medium {
+  color: var(--coffee-medium);
+}
+
+.text-coffee-light {
+  color: var(--coffee-light);
+}
+
+.bg-coffee-dark {
+  background-color: var(--coffee-dark);
+}
+
+.bg-coffee-medium {
+  background-color: var(--coffee-medium);
+}
+
+.bg-coffee-light {
+  background-color: var(--coffee-light);
+}
+
+.bg-cream {
+  background-color: var(--cream);
+}
+
+.bg-earth {
+  background-color: var(--earth);
+}
+
+.bg-warm-brown {
+  background-color: var(--warm-brown);
+}
+
+/* Scroll animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.6s ease-out forwards;
+}
+
+.animate-on-scroll {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: all 0.6s ease-out;
+}
+
+.animate-on-scroll.in-view {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Hide scrollbars */
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;  /* Chrome, Safari and Opera */
+}
+
+/* Admin dashboard - hide all scrollbars */
+.admin-container,
+.admin-container * {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.admin-container::-webkit-scrollbar,
+.admin-container *::-webkit-scrollbar {
+  display: none;
+}
