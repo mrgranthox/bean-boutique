@@ -1,12 +1,44 @@
-import { useState, useEffect } from 'react';
-import { Button } from './ui/button';
-import { Badge } from './ui/badge';
-import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle, SheetDescription } from './ui/sheet';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from './ui/dropdown-menu';
-import { Menu, ShoppingCart, Coffee, Wrench, Calendar, Tag, Gift, User, FileText, HelpCircle, Phone, Shield, ScrollText, X, LogOut, Settings, UserCog } from 'lucide-react';
-import { AuthModal } from './AuthModal';
-import { useCart, useAuth } from '../App';
-import type { Page } from '../App';
+import { useState, useEffect } from "react";
+import { Button } from "./ui/button";
+import { Badge } from "./ui/badge";
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+} from "./ui/sheet";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "./ui/dropdown-menu";
+import {
+  Menu,
+  ShoppingCart,
+  Coffee,
+  Wrench,
+  Calendar,
+  Tag,
+  Gift,
+  User,
+  FileText,
+  HelpCircle,
+  Phone,
+  Shield,
+  ScrollText,
+  X,
+  LogOut,
+  Settings,
+  UserCog,
+} from "lucide-react";
+import { AuthModal } from "./AuthModal";
+import { useCart, useAuth } from "../App";
+import type { Page } from "../App";
 
 interface NavigationProps {
   currentPage: Page;
@@ -14,22 +46,86 @@ interface NavigationProps {
 }
 
 const navigationItems = [
-  { page: 'home' as Page, label: 'Home', icon: Coffee, description: 'Welcome to Bean Boutique' },
-  { page: 'coffee' as Page, label: 'Coffee Selection', icon: Coffee, description: 'Premium coffee beans from around the world' },
-  { page: 'equipment' as Page, label: 'Brewing Equipment', icon: Wrench, description: 'Professional brewing tools & accessories' },
-  { page: 'events' as Page, label: 'Events & Workshops', icon: Calendar, description: 'Learn brewing techniques from experts' },
-  { page: 'offers' as Page, label: 'Special Offers', icon: Tag, description: 'Exclusive deals and promotions' },
-  { page: 'subscription' as Page, label: 'Subscriptions', icon: Gift, description: 'Fresh coffee delivered monthly' },
-  { page: 'about' as Page, label: 'About Us', icon: User, description: 'Our story and commitment to quality' },
-  { page: 'blog' as Page, label: 'Blog', icon: FileText, description: 'Coffee tips, recipes, and stories' },
-  { page: 'faq' as Page, label: 'FAQ', icon: HelpCircle, description: 'Frequently asked questions' },
-  { page: 'contact' as Page, label: 'Contact', icon: Phone, description: 'Get in touch with our team' },
-  { page: 'privacy' as Page, label: 'Privacy Policy', icon: Shield, description: 'How we protect your data' },
-  { page: 'terms' as Page, label: 'Terms of Service', icon: ScrollText, description: 'Our terms and conditions' }
+  {
+    page: "home" as Page,
+    label: "Home",
+    icon: Coffee,
+    description: "Welcome to Bean Boutique",
+  },
+  {
+    page: "coffee" as Page,
+    label: "Coffee Selection",
+    icon: Coffee,
+    description: "Premium coffee beans from around the world",
+  },
+  {
+    page: "equipment" as Page,
+    label: "Brewing Equipment",
+    icon: Wrench,
+    description: "Professional brewing tools & accessories",
+  },
+  {
+    page: "events" as Page,
+    label: "Events & Workshops",
+    icon: Calendar,
+    description: "Learn brewing techniques from experts",
+  },
+  {
+    page: "offers" as Page,
+    label: "Special Offers",
+    icon: Tag,
+    description: "Exclusive deals and promotions",
+  },
+  {
+    page: "subscription" as Page,
+    label: "Subscriptions",
+    icon: Gift,
+    description: "Fresh coffee delivered monthly",
+  },
+  {
+    page: "about" as Page,
+    label: "About Us",
+    icon: User,
+    description: "Our story and commitment to quality",
+  },
+  {
+    page: "blog" as Page,
+    label: "Blog",
+    icon: FileText,
+    description: "Coffee tips, recipes, and stories",
+  },
+  {
+    page: "faq" as Page,
+    label: "FAQ",
+    icon: HelpCircle,
+    description: "Frequently asked questions",
+  },
+  {
+    page: "contact" as Page,
+    label: "Contact",
+    icon: Phone,
+    description: "Get in touch with our team",
+  },
+  {
+    page: "privacy" as Page,
+    label: "Privacy Policy",
+    icon: Shield,
+    description: "How we protect your data",
+  },
+  {
+    page: "terms" as Page,
+    label: "Terms of Service",
+    icon: ScrollText,
+    description: "Our terms and conditions",
+  },
 ];
 
 // Auth Component for Navigation
-function AuthComponent({ onPageChange }: { onPageChange?: (page: Page) => void }) {
+function AuthComponent({
+  onPageChange,
+}: {
+  onPageChange?: (page: Page) => void;
+}) {
   const { user, signOut } = useAuth();
 
   if (user) {
@@ -39,18 +135,20 @@ function AuthComponent({ onPageChange }: { onPageChange?: (page: Page) => void }
           <Button variant="ghost" size="sm" className="gap-2">
             <User className="h-4 w-4" />
             <span className="hidden md:inline">
-              {user.user_metadata?.name || user.email?.split('@')[0] || 'Account'}
+              {user.user_metadata?.name ||
+                user.email?.split("@")[0] ||
+                "Account"}
             </span>
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-48">
           <DropdownMenuLabel>My Account</DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={() => onPageChange?.('profile')}>
+          <DropdownMenuItem onClick={() => onPageChange?.("profile")}>
             <User className="h-4 w-4 mr-2" />
             Profile
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => onPageChange?.('admin')}>
+          <DropdownMenuItem onClick={() => onPageChange?.("admin")}>
             <UserCog className="h-4 w-4 mr-2" />
             Admin Dashboard
           </DropdownMenuItem>
@@ -69,7 +167,7 @@ function AuthComponent({ onPageChange }: { onPageChange?: (page: Page) => void }
   }
 
   return (
-    <AuthModal 
+    <AuthModal
       trigger={
         <Button variant="outline" size="sm">
           <User className="h-4 w-4 mr-2" />
@@ -90,8 +188,8 @@ export function Navigation({ currentPage, onPageChange }: NavigationProps) {
       setIsScrolled(window.scrollY > 10);
     };
 
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   const handlePageChange = (page: Page) => {
@@ -99,7 +197,7 @@ export function Navigation({ currentPage, onPageChange }: NavigationProps) {
     setIsOpen(false);
     // Scroll to top smoothly
     setTimeout(() => {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }, 100);
   };
 
@@ -107,14 +205,18 @@ export function Navigation({ currentPage, onPageChange }: NavigationProps) {
   const secondaryNavItems = navigationItems.slice(6);
 
   return (
-    <nav className={`sticky top-0 z-50 transition-all duration-300 ${
-      isScrolled ? 'bg-background/95 backdrop-blur-sm shadow-sm' : 'bg-background'
-    }`}>
+    <nav
+      className={`sticky top-0 z-50 transition-all duration-300 ${
+        isScrolled
+          ? "bg-background/95 backdrop-blur-sm shadow-sm"
+          : "bg-background"
+      }`}
+    >
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <button
-            onClick={() => handlePageChange('home')}
+            onClick={() => handlePageChange("home")}
             className="flex items-center gap-2 font-medium text-xl"
           >
             <Coffee className="h-6 w-6 text-primary" />
@@ -128,7 +230,9 @@ export function Navigation({ currentPage, onPageChange }: NavigationProps) {
                 key={item.page}
                 onClick={() => handlePageChange(item.page)}
                 className={`text-sm font-medium transition-colors hover:text-primary ${
-                  currentPage === item.page ? 'text-primary' : 'text-muted-foreground'
+                  currentPage === item.page
+                    ? "text-primary"
+                    : "text-muted-foreground"
                 }`}
               >
                 {item.label}
@@ -141,7 +245,7 @@ export function Navigation({ currentPage, onPageChange }: NavigationProps) {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => handlePageChange('cart')}
+              onClick={() => handlePageChange("cart")}
               className="relative"
             >
               <ShoppingCart className="h-5 w-5" />
@@ -154,17 +258,17 @@ export function Navigation({ currentPage, onPageChange }: NavigationProps) {
                 </Badge>
               )}
             </Button>
-            
+
             {/* Auth Section */}
             <AuthComponent onPageChange={handlePageChange} />
           </div>
-          
+
           {/* Mobile Controls */}
           <div className="flex lg:hidden items-center gap-2">
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => handlePageChange('cart')}
+              onClick={() => handlePageChange("cart")}
               className="relative"
             >
               <ShoppingCart className="h-5 w-5" />
@@ -182,7 +286,7 @@ export function Navigation({ currentPage, onPageChange }: NavigationProps) {
             <Sheet open={isOpen} onOpenChange={setIsOpen}>
               <SheetTrigger asChild>
                 <Button variant="ghost" size="sm" className="lg:hidden">
-                  <Menu className="h-5 w-5" />
+                  <Menu size={32} className="h-10 w-10 text-red-500" />
                 </Button>
               </SheetTrigger>
               <SheetContent side="right" className="w-full sm:w-[400px] p-0">
@@ -203,7 +307,8 @@ export function Navigation({ currentPage, onPageChange }: NavigationProps) {
                       </Button>
                     </div>
                     <SheetDescription>
-                      Navigate through our premium coffee and brewing equipment collection
+                      Navigate through our premium coffee and brewing equipment
+                      collection
                     </SheetDescription>
                   </SheetHeader>
 
@@ -211,7 +316,9 @@ export function Navigation({ currentPage, onPageChange }: NavigationProps) {
                   <div className="flex-1 overflow-y-auto p-4">
                     <div className="space-y-1">
                       <div className="pb-4">
-                        <h3 className="text-sm font-medium text-muted-foreground mb-3">Main Menu</h3>
+                        <h3 className="text-sm font-medium text-muted-foreground mb-3">
+                          Main Menu
+                        </h3>
                         <div className="space-y-1">
                           {mainNavItems.map((item) => {
                             const Icon = item.icon;
@@ -221,13 +328,15 @@ export function Navigation({ currentPage, onPageChange }: NavigationProps) {
                                 onClick={() => handlePageChange(item.page)}
                                 className={`w-full flex items-start gap-3 p-3 rounded-lg text-left transition-colors ${
                                   currentPage === item.page
-                                    ? 'bg-primary/10 text-primary'
-                                    : 'hover:bg-muted text-foreground'
+                                    ? "bg-primary/10 text-primary"
+                                    : "hover:bg-muted text-foreground"
                                 }`}
                               >
                                 <Icon className="h-5 w-5 mt-0.5 flex-shrink-0" />
                                 <div className="flex-1 min-w-0">
-                                  <div className="font-medium">{item.label}</div>
+                                  <div className="font-medium">
+                                    {item.label}
+                                  </div>
                                   <div className="text-sm text-muted-foreground mt-1">
                                     {item.description}
                                   </div>
@@ -239,7 +348,9 @@ export function Navigation({ currentPage, onPageChange }: NavigationProps) {
                       </div>
 
                       <div className="pt-4 border-t">
-                        <h3 className="text-sm font-medium text-muted-foreground mb-3">More</h3>
+                        <h3 className="text-sm font-medium text-muted-foreground mb-3">
+                          More
+                        </h3>
                         <div className="space-y-1">
                           {secondaryNavItems.map((item) => {
                             const Icon = item.icon;
@@ -249,13 +360,15 @@ export function Navigation({ currentPage, onPageChange }: NavigationProps) {
                                 onClick={() => handlePageChange(item.page)}
                                 className={`w-full flex items-start gap-3 p-3 rounded-lg text-left transition-colors ${
                                   currentPage === item.page
-                                    ? 'bg-primary/10 text-primary'
-                                    : 'hover:bg-muted text-foreground'
+                                    ? "bg-primary/10 text-primary"
+                                    : "hover:bg-muted text-foreground"
                                 }`}
                               >
                                 <Icon className="h-4 w-4 mt-1 flex-shrink-0" />
                                 <div className="flex-1 min-w-0">
-                                  <div className="text-sm font-medium">{item.label}</div>
+                                  <div className="text-sm font-medium">
+                                    {item.label}
+                                  </div>
                                   <div className="text-xs text-muted-foreground mt-1">
                                     {item.description}
                                   </div>
@@ -274,9 +387,11 @@ export function Navigation({ currentPage, onPageChange }: NavigationProps) {
                     <div className="mb-4">
                       <AuthComponent onPageChange={handlePageChange} />
                     </div>
-                    
+
                     <div className="text-center">
-                      <div className="text-sm font-medium mb-1">Bean Boutique</div>
+                      <div className="text-sm font-medium mb-1">
+                        Bean Boutique
+                      </div>
                       <div className="text-xs text-muted-foreground">
                         Premium coffee & brewing equipment
                       </div>
