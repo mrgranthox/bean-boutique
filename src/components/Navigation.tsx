@@ -295,15 +295,20 @@ export function Navigation({ currentPage, onPageChange }: NavigationProps) {
                   <SheetHeader className="p-6 border-b">
                     <div className="flex items-center justify-between">
                       <SheetTitle className="flex items-center gap-2">
-                        <Coffee className="h-5 w-5 text-primary" />
-                        Bean Boutique
+                        <button
+                          onClick={() => handlePageChange("home")}
+                          className="flex items-center gap-2 font-medium text-xl"
+                        >
+                          <Coffee className="h-6 w-6 text-primary" />
+                          <span>Bean Boutique</span>
+                        </button>
                       </SheetTitle>
                       <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => setIsOpen(false)}
                       >
-                        <X className="h-4 w-4" />
+                        {/* <X className="h-4 w-4" /> */}
                       </Button>
                     </div>
                     <SheetDescription>

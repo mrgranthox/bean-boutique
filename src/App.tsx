@@ -395,24 +395,24 @@ export default function App() {
           <Footer onPageChange={handlePageChange} />
 
           {/* Data Source Indicator */}
-          <DataSourceIndicator />
+          {/* <DataSourceIndicator /> */}
 
           {/* OAuth Tools - Only show in development */}
-          {env.features.enableOAuthDebugTools && (
+          {/* {env.features.enableOAuthDebugTools && (
             <>
               <OAuthSetupWizard />
               <OAuthDebugger />
               <OAuthTroubleshooter />
             </>
-          )}
+          )} */}
 
           {/* Centered Toast Container */}
           <Toaster
-            position="top-center"
+            position="bottom-center"
             toastOptions={{
               style: {
-                background: "hsl(var(--card))",
-                color: "hsl(var(--card-foreground))",
+                background: "#a8b4c7ff",
+                color: "#bc6406ff",
                 border: "1px solid hsl(var(--border))",
               },
             }}
