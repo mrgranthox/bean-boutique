@@ -105,6 +105,7 @@ export default function App() {
 
   // Use local cart hook (localStorage-based, no database)
   const cartHook = useLocalCart(authLoading ? null : user);
+  const isAppReady = !authLoading && cartHook !== undefined;
 
   // Initialize auth and data on app start
   useEffect(() => {
@@ -368,8 +369,19 @@ export default function App() {
     error: cartHook.error,
   };
 
-  // Show loading screen only if auth is still loading (allow app to work without backend)
+  console.log("🔍 App Ready Check:", {
+    authLoading,
+    cartHook: cartHook ? "exists" : "null",
+    cartLoading: cartHook?.loading,
+    isReady: !authLoading && cartHook && !cartHook.loading,
+  });
+
   if (authLoading) {
+    console.log("⏳ Showing loading screen because auth is loading");
+    return console.log("⏳ Showing loading screen because auth is loading");
+  }
+  // Show loading screen only if auth is still loading (allow app to work without backend)
+  if (!isAppReady) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
@@ -390,7 +402,7 @@ export default function App() {
             onPageChange={handlePageChange}
           />
 
-          <main className="animate-on-scroll">{renderPage()}</main>
+          <main>{renderPage()}</main>
 
           <Footer onPageChange={handlePageChange} />
 

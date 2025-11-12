@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "../ui/button";
 import {
   Card,
@@ -49,22 +49,22 @@ export function HomePage({ onPageChange }: HomePageProps) {
   const { addToCart } = useCart();
   const [featuredProducts, setFeaturedProducts] = useState<DBProduct[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Load featured products from database
-  useEffect(() => {
-    loadFeaturedProducts();
-  }, []);
-
-  const loadFeaturedProducts = async () => {
+  const loadFeaturedProducts = useCallback(async () => {
     try {
       setLoading(true);
+      setError(null);
       console.log("🏠 HomePage: Loading featured products from database...");
 
-      // Get featured products directly from database
-      const { data, error } = await getProducts({ featured: true, limit: 3 });
+      const { data, error: dbError } = await getProducts({
+        featured: true,
+        limit: 3,
+      });
 
-      if (error) {
-        console.error("HomePage: Database error:", error);
+      if (dbError) {
+        console.error("HomePage: Database error:", dbError);
+        setError("Failed to load products");
         toast.error("Failed to load products");
         return;
       }
@@ -73,20 +73,33 @@ export function HomePage({ onPageChange }: HomePageProps) {
         console.warn(
           "HomePage: No featured products found, loading any products"
         );
-        // If no featured products, get any 3 products
-        const { data: anyProducts } = await getProducts({ limit: 3 });
-        setFeaturedProducts(anyProducts);
+        const { data: anyProducts, error: fallbackError } = await getProducts({
+          limit: 3,
+        });
+
+        if (fallbackError) {
+          console.error("HomePage: Fallback error:", fallbackError);
+          setError("Failed to load products");
+          return;
+        }
+
+        setFeaturedProducts(anyProducts || []);
       } else {
-        console.log("HomePage: Loaded", data);
+        console.log("HomePage: Loaded", data.length, "products");
         setFeaturedProducts(data);
       }
     } catch (error) {
       console.error("HomePage: Error loading products:", error);
+      setError("Failed to load products");
       toast.error("Failed to load products");
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadFeaturedProducts();
+  }, [loadFeaturedProducts]);
 
   const handleAddToCart = async (productOrId: string | any) => {
     // Extract product ID from object or use as string
@@ -213,7 +226,7 @@ export function HomePage({ onPageChange }: HomePageProps) {
         <div className="absolute inset-0 bg-black/20" />
         <div className="container mx-auto px-4 relative z-10">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <div className="text-center lg:text-left animate-on-scroll">
+            <div className="text-center lg:text-left l">
               <Badge className="bg-white/20 text-white mb-6">
                 ☕ Premium Coffee Experience
               </Badge>
@@ -228,7 +241,7 @@ export function HomePage({ onPageChange }: HomePageProps) {
               <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
                 <Button
                   size="lg"
-                  className="bg-white text-coffee-dark hover:"
+                  className="bg-white text-coffee-dark hover::cursor-pointer"
                   onClick={() => onPageChange("coffee")}
                 >
                   <Coffee className="h-5 w-5 mr-2" />
@@ -244,7 +257,7 @@ export function HomePage({ onPageChange }: HomePageProps) {
                 </Button>
               </div>
             </div>
-            <div className="relative animate-on-scroll">
+            <div className="relative ">
               <div className="aspect-square rounded-full bg-gradient-to-br from-amber-200/20 to-transparent p-8">
                 <ImageWithFallback
                   src="https://images.unsplash.com/photo-1559056199-641a0ac8b55e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHhjb2ZmZWUlMjBjdXAlMjBzdGVhbXxlbnwxfHx8fDE3NTU3OTczNjF8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral"
@@ -271,7 +284,7 @@ export function HomePage({ onPageChange }: HomePageProps) {
       {/* Features */}
       <section className="py-16">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-12 animate-on-scroll">
+          <div className="text-center mb-12 ">
             <h2 className="text-3xl md:text-4xl mb-4">
               Why Choose Bean Boutique?
             </h2>
@@ -284,7 +297,7 @@ export function HomePage({ onPageChange }: HomePageProps) {
             {sustainabilityFeatures.map((feature, index) => {
               const Icon = feature.icon;
               return (
-                <Card key={index} className="text-center animate-on-scroll">
+                <Card key={index} className="text-center ">
                   <CardContent className="p-8">
                     <Icon className="h-12 w-12 text-primary mx-auto mb-4" />
                     <h3 className="text-xl mb-3">{feature.title}</h3>
@@ -302,7 +315,7 @@ export function HomePage({ onPageChange }: HomePageProps) {
       {/* Featured Products */}
       <section className="py-16 bg-muted/30">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-12 animate-on-scroll">
+          <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl mb-4">Featured Products</h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
               Discover our most popular coffee beans and brewing equipment,
@@ -414,7 +427,7 @@ export function HomePage({ onPageChange }: HomePageProps) {
             </div>
           )}
 
-          <div className="text-center mt-12 animate-on-scroll">
+          <div className="text-center mt-12 ">
             <Button
               variant="outline"
               size="lg"
@@ -430,7 +443,7 @@ export function HomePage({ onPageChange }: HomePageProps) {
       {/* Customer Testimonials */}
       <section className="py-16">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-12 animate-on-scroll">
+          <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl mb-4">
               What Our Customers Say
             </h2>
@@ -442,7 +455,7 @@ export function HomePage({ onPageChange }: HomePageProps) {
 
           <div className="grid md:grid-cols-3 gap-8">
             {testimonials.map((testimonial, index) => (
-              <Card key={index} className="animate-on-scroll">
+              <Card key={index}>
                 <CardContent className="p-6">
                   <Quote className="h-8 w-8 text-primary mb-4" />
                   <p className="text-muted-foreground mb-6 leading-relaxed">
@@ -482,7 +495,7 @@ export function HomePage({ onPageChange }: HomePageProps) {
             ))}
           </div>
 
-          <div className="text-center mt-12 animate-on-scroll">
+          <div className="text-center mt-12 ">
             <p className="text-muted-foreground mb-4">
               Join thousands of satisfied customers
             </p>
@@ -501,14 +514,14 @@ export function HomePage({ onPageChange }: HomePageProps) {
       {/* Quick Actions */}
       <section className="py-16 bg-muted/30">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-12 animate-on-scroll">
+          <div className="text-center mb-12 ">
             <h2 className="text-3xl md:text-4xl mb-4">Explore Bean Boutique</h2>
             <p className="text-muted-foreground">
               Everything you need for the perfect coffee experience
             </p>
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <Card className="text-center animate-on-scroll">
+            <Card className="text-center ">
               <CardContent className="p-6">
                 <Calendar className="h-10 w-10 text-primary mx-auto mb-4" />
                 <h3 className="font-medium mb-2">Workshops & Events</h3>
@@ -531,7 +544,7 @@ export function HomePage({ onPageChange }: HomePageProps) {
               </CardContent>
             </Card>
 
-            <Card className="text-center animate-on-scroll">
+            <Card className="text-center">
               <CardContent className="p-6">
                 <Coffee className="h-10 w-10 text-primary mx-auto mb-4" />
                 <h3 className="font-medium mb-2">Coffee Subscriptions</h3>
@@ -554,7 +567,7 @@ export function HomePage({ onPageChange }: HomePageProps) {
               </CardContent>
             </Card>
 
-            <Card className="text-center animate-on-scroll">
+            <Card className="text-center ">
               <CardContent className="p-6">
                 <Star className="h-10 w-10 text-primary mx-auto mb-4" />
                 <h3 className="font-medium mb-2">Special Offers</h3>
@@ -577,7 +590,7 @@ export function HomePage({ onPageChange }: HomePageProps) {
               </CardContent>
             </Card>
 
-            <Card className="text-center animate-on-scroll">
+            <Card className="text-center">
               <CardContent className="p-6">
                 <Users className="h-10 w-10 text-primary mx-auto mb-4" />
                 <h3 className="font-medium mb-2">About Bean Boutique</h3>
@@ -605,7 +618,7 @@ export function HomePage({ onPageChange }: HomePageProps) {
 
       {/* Newsletter */}
       <section className="py-16 bg-primary text-primary-foreground">
-        <div className="container mx-auto px-4 text-center animate-on-scroll">
+        <div className="container mx-auto px-4 text-center">
           <h2 className="text-3xl md:text-4xl mb-4">Stay Connected</h2>
           <p className="text-xl mb-8 text-primary-foreground/90 max-w-2xl mx-auto">
             Get the latest coffee tips, product updates, and exclusive offers
