@@ -24,6 +24,7 @@ import {
   Heart,
   Eye,
   Loader2,
+  Info,
 } from "lucide-react";
 import type { Page } from "../../App";
 
@@ -134,8 +135,8 @@ export function BrewingEquipmentPage({
         page: currentPage,
         limit: itemsPerPage,
         search: filters.search || undefined,
-        brand: filters.brand || undefined,
-        priceRange: filters.priceRange || undefined,
+        //brand: filters.brand || undefined,
+        //priceRange: filters.priceRange || undefined,
         sortBy:
           sortBy === "featured"
             ? "name"
@@ -237,7 +238,12 @@ export function BrewingEquipmentPage({
       case "rating":
         return sorted.sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0));
       case "newest":
-        return sorted.sort((a, b) => (b.created_at ?? 0) - (a.created_at ?? 0));
+        return sorted.sort((a, b) => {
+          const aTime = a.created_at ? new Date(a.created_at).getTime() : 0;
+          const bTime = b.created_at ? new Date(b.created_at).getTime() : 0;
+          return bTime - aTime;
+        });
+
       case "popular":
         return sorted.sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0));
       case "featured":
@@ -367,7 +373,7 @@ export function BrewingEquipmentPage({
           )}
 
           {/* Quick Action Overlay */}
-          <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+          {/* <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
             <Button
               size="sm"
               variant="secondary"
@@ -385,9 +391,9 @@ export function BrewingEquipmentPage({
               disabled={!item.stock}
             >
               <ShoppingCart className="w-4 h-4 mr-1" />
-              Add
+              Add to cart
             </Button>
-          </div>
+          </div> */}
         </div>
 
         <CardContent
@@ -444,6 +450,27 @@ export function BrewingEquipmentPage({
                 </Badge>
               )}
             </div>
+          </div>
+          <div className="flex gap-2 mt-2">
+            <Button
+              className="flex-1"
+              size="sm"
+              onClick={(e) => handleAddToCart(item, e)}
+              disabled={!item.stock}
+            >
+              <ShoppingCart className="h-4 w-4 mr-2" />
+              {item.stock ? "Add to Cart" : "Out of Stock"}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                onPageChange("product-details", item.id, "equipment");
+              }}
+            >
+              <Info className="h-4 w-4" />
+            </Button>
           </div>
 
           {/* Tags */}

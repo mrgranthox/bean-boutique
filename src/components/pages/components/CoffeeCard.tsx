@@ -181,7 +181,7 @@ export function CoffeeCard({
         </div>
 
         {/* Quick Action Overlay */}
-        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+        {/* <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
           <Button
             size="sm"
             variant="secondary"
@@ -201,7 +201,7 @@ export function CoffeeCard({
             <ShoppingCart className="w-4 h-4 mr-1" />
             Add to Cart
           </Button>
-        </div>
+        </div> */}
       </div>
 
       <CardContent className="p-4">
