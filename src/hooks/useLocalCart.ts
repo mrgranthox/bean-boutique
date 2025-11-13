@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 
-interface CartItem {
+export interface CartItem {
   productId: string;
   name: string;
   price: number;
@@ -10,7 +10,7 @@ interface CartItem {
   added_at: string;
 }
 
-interface Cart {
+export interface Cart {
   items: CartItem[];
   total: number;
   updated_at: string;
@@ -18,27 +18,20 @@ interface Cart {
 
 const CART_STORAGE_KEY = "bean_boutique_cart";
 
-// Helper function to load cart from localStorage
+// Load cart from localStorage
 function loadCartFromStorage(): Cart {
   try {
     const stored = localStorage.getItem(CART_STORAGE_KEY);
-    if (stored) {
-      const cart = JSON.parse(stored);
-      return cart;
-    }
-  } catch (error) {
-    // console.error('Error loading cart from localStorage:', error);
-  }
+    if (stored) return JSON.parse(stored);
+  } catch {}
   return { items: [], total: 0, updated_at: new Date().toISOString() };
 }
 
-// Helper function to save cart to localStorage
+// Save cart to localStorage
 function saveCartToStorage(cart: Cart): void {
   try {
     localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
-  } catch (error) {
-    // console.error('Error saving cart to localStorage:', error);
-  }
+  } catch {}
 }
 
 export function useLocalCart(user: any = null) {
@@ -46,69 +39,33 @@ export function useLocalCart(user: any = null) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Save cart to localStorage whenever it changes
+  // Persist cart to localStorage on change
   useEffect(() => {
     saveCartToStorage(cart);
   }, [cart]);
 
-  // Clear cart when user signs out
-  useEffect(() => {
-    if (!user) {
-      // Keep the cart in localStorage even when signed out
-      // This allows users to add items before signing in
-      //console.log('User signed out, cart persisted in localStorage');
-    }
-  }, [user]);
-
   // Add item to cart
   const addToCart = async (
     productOrId: string | any,
-    quantity: number = 1
+    quantity = 1
   ): Promise<boolean> => {
-    try {
-      setLoading(true);
-      setError(null);
+    setLoading(true);
+    setError(null);
 
-      // Extract product details
+    try {
       let productId: string;
-      let productName: string;
-      let productPrice: number;
-      let productImage: string;
+      let productName = "Product";
+      let productPrice = 0;
+      let productImage = "";
 
       if (typeof productOrId === "object" && productOrId !== null) {
-        // Product object passed
         productId = productOrId.id;
-        productName = productOrId.name || "Product";
+        productName = productOrId.name || productName;
         productPrice = productOrId.price || 0;
         productImage = productOrId.image || "";
       } else if (typeof productOrId === "string") {
-        // Just ID passed - need to fetch product details
         productId = productOrId;
-
-        // Try to get product info from data-manager or show error
-        const { dataManager } = await import("../utils/data-manager");
-        try {
-          const response = await dataManager.getProduct(productId);
-          if (response.product) {
-            productName = response.product.name;
-            productPrice = response.product.price;
-            productImage = response.product.image;
-          } else {
-            throw new Error("Product not found");
-          }
-        } catch (err) {
-          // console.error('Failed to fetch product details:', err);
-          toast.error("Unable to add item: Product information not available");
-          return false;
-        }
       } else {
-        //console.error('Invalid product data:', productOrId);
-        toast.error("Invalid product");
-        return false;
-      }
-
-      if (!productId) {
-        // console.error('useLocalCart: Invalid product ID:', productOrId);
         toast.error("Invalid product");
         return false;
       }
@@ -122,127 +79,130 @@ export function useLocalCart(user: any = null) {
         added_at: new Date().toISOString(),
       };
 
+      // Optimistic update: add immediately
       setCart((prevCart) => {
-        const updatedCart = { ...prevCart };
-        const existingIndex = updatedCart.items.findIndex(
+        const updated = { ...prevCart };
+        const existingIndex = updated.items.findIndex(
           (item) => item.productId === productId
         );
 
         if (existingIndex >= 0) {
-          // Update existing item quantity
-          updatedCart.items[existingIndex].quantity += quantity;
-          updatedCart.items[existingIndex].added_at = new Date().toISOString();
+          updated.items[existingIndex].quantity += quantity;
+          updated.items[existingIndex].added_at = new Date().toISOString();
         } else {
-          // Add new item
-          updatedCart.items.push(newItem);
+          updated.items.push(newItem);
         }
 
-        // Recalculate total
-        updatedCart.total = updatedCart.items.reduce(
+        updated.total = updated.items.reduce(
           (sum, item) => sum + item.price * item.quantity,
           0
         );
-        updatedCart.updated_at = new Date().toISOString();
-
-        return updatedCart;
+        updated.updated_at = new Date().toISOString();
+        return updated;
       });
+
+      // If ID only, fetch product info asynchronously
+      if (typeof productOrId === "string") {
+        const { dataManager } = await import("../utils/data-manager");
+        try {
+          const response = await dataManager.getProduct(productId);
+          if (response.product) {
+            setCart((prevCart) => {
+              const updated = { ...prevCart };
+              const idx = updated.items.findIndex(
+                (i) => i.productId === productId
+              );
+              if (idx >= 0) {
+                updated.items[idx].name = response.product.name;
+                updated.items[idx].price = response.product.price;
+                updated.items[idx].image = response.product.image;
+                updated.total = updated.items.reduce(
+                  (sum, item) => sum + item.price * item.quantity,
+                  0
+                );
+              }
+              return updated;
+            });
+          }
+        } catch {
+          toast.error("Unable to fetch product info");
+        }
+      }
 
       return true;
     } catch (err) {
-      const errorMessage =
+      const msg =
         err instanceof Error ? err.message : "Failed to add item to cart";
-      setError(errorMessage);
-      // console.error('Add to cart error:', err);
+      setError(msg);
       return false;
     } finally {
       setLoading(false);
     }
   };
 
-  // Update item quantity
+  // Update quantity
   const updateQuantity = async (
     productId: string,
     quantity: number
   ): Promise<boolean> => {
+    if (quantity < 1) {
+      toast.error("Quantity must be at least 1");
+      return false;
+    }
+
     try {
       setLoading(true);
-      setError(null);
-
-      if (quantity < 1) {
-        toast.error("Quantity must be at least 1");
-        return false;
-      }
-
       setCart((prevCart) => {
-        const updatedCart = { ...prevCart };
-        const itemIndex = updatedCart.items.findIndex(
-          (item) => item.productId === productId
-        );
-
-        if (itemIndex >= 0) {
-          updatedCart.items[itemIndex].quantity = quantity;
-          updatedCart.items[itemIndex].added_at = new Date().toISOString();
-
-          // Recalculate total
-          updatedCart.total = updatedCart.items.reduce(
+        const updated = { ...prevCart };
+        const idx = updated.items.findIndex((i) => i.productId === productId);
+        if (idx >= 0) {
+          updated.items[idx].quantity = quantity;
+          updated.items[idx].added_at = new Date().toISOString();
+          updated.total = updated.items.reduce(
             (sum, item) => sum + item.price * item.quantity,
             0
           );
-          updatedCart.updated_at = new Date().toISOString();
+          updated.updated_at = new Date().toISOString();
         }
-
-        return updatedCart;
+        return updated;
       });
-
       return true;
     } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : "Failed to update cart";
-      setError(errorMessage);
-      //console.error('Update cart error:', err);
+      const msg = err instanceof Error ? err.message : "Failed to update cart";
+      setError(msg);
       return false;
     } finally {
       setLoading(false);
     }
   };
 
-  // Remove item from cart
+  // Remove item
   const removeItem = async (productId: string): Promise<boolean> => {
     try {
       setLoading(true);
-      setError(null);
-
       setCart((prevCart) => {
-        const updatedCart = { ...prevCart };
-        updatedCart.items = updatedCart.items.filter(
-          (item) => item.productId !== productId
-        );
-
-        // Recalculate total
-        updatedCart.total = updatedCart.items.reduce(
+        const updated = { ...prevCart };
+        updated.items = updated.items.filter((i) => i.productId !== productId);
+        updated.total = updated.items.reduce(
           (sum, item) => sum + item.price * item.quantity,
           0
         );
-        updatedCart.updated_at = new Date().toISOString();
-
-        return updatedCart;
+        updated.updated_at = new Date().toISOString();
+        return updated;
       });
-
       return true;
     } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : "Failed to remove item";
-      setError(errorMessage);
-      // console.error('Remove from cart error:', err);
+      const msg = err instanceof Error ? err.message : "Failed to remove item";
+      setError(msg);
       return false;
     } finally {
       setLoading(false);
     }
   };
 
-  // Clear entire cart
+  // Clear cart
   const clearCart = () => {
-    const emptyCart = {
+    const emptyCart: Cart = {
       items: [],
       total: 0,
       updated_at: new Date().toISOString(),
@@ -251,8 +211,8 @@ export function useLocalCart(user: any = null) {
     saveCartToStorage(emptyCart);
   };
 
-  // Refresh cart (reload from localStorage)
-  const refreshCart = async () => {
+  // Refresh cart from localStorage
+  const refreshCart = () => {
     const storedCart = loadCartFromStorage();
     setCart(storedCart);
   };
