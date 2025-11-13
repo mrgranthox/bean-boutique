@@ -631,32 +631,32 @@ export function UserProfilePage({ onPageChange }: UserProfilePageProps) {
           onValueChange={setActiveTab}
           className="space-y-6"
         >
-          <TabsList className="grid grid-cols-5 lg:w-fit">
+          <TabsList className="grid grid-cols-5 w-full lg:w-fit">
             <TabsTrigger value="profile" className="flex items-center gap-2">
               <User className="w-4 h-4" />
-              Profile
+              <span className="hidden sm:inline">Profile</span>
             </TabsTrigger>
             <TabsTrigger value="orders" className="flex items-center gap-2">
               <Package className="w-4 h-4" />
-              Orders
+              <span className="hidden sm:inline">Orders</span>
             </TabsTrigger>
             <TabsTrigger
               value="subscriptions"
               className="flex items-center gap-2"
             >
               <Coffee className="w-4 h-4" />
-              Subscriptions
+              <span className="hidden sm:inline">Subscriptions</span>
             </TabsTrigger>
             <TabsTrigger value="addresses" className="flex items-center gap-2">
               <MapPin className="w-4 h-4" />
-              Addresses
+              <span className="hidden sm:inline">Addresses</span>
             </TabsTrigger>
             <TabsTrigger
               value="preferences"
               className="flex items-center gap-2"
             >
               <Settings className="w-4 h-4" />
-              Preferences
+              <span className="hidden sm:inline">Preferences</span>
             </TabsTrigger>
           </TabsList>
 
