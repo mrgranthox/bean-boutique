@@ -55,7 +55,7 @@ export function HomePage({ onPageChange }: HomePageProps) {
     try {
       setLoading(true);
       setError(null);
-      console.log("🏠 HomePage: Loading featured products from database...");
+      //console.log("🏠 HomePage: Loading featured products from database...");
 
       const { data, error: dbError } = await getProducts({
         featured: true,
@@ -63,33 +63,33 @@ export function HomePage({ onPageChange }: HomePageProps) {
       });
 
       if (dbError) {
-        console.error("HomePage: Database error:", dbError);
+        //console.error("HomePage: Database error:", dbError);
         setError("Failed to load products");
         toast.error("Failed to load products");
         return;
       }
 
       if (data.length === 0) {
-        console.warn(
-          "HomePage: No featured products found, loading any products"
-        );
+        // console.warn(
+        //   "HomePage: No featured products found, loading any products"
+        // );
         const { data: anyProducts, error: fallbackError } = await getProducts({
           limit: 3,
         });
 
         if (fallbackError) {
-          console.error("HomePage: Fallback error:", fallbackError);
+          //console.error("HomePage: Fallback error:", fallbackError);
           setError("Failed to load products");
           return;
         }
 
         setFeaturedProducts(anyProducts || []);
       } else {
-        console.log("HomePage: Loaded", data.length, "products");
+        //console.log("HomePage: Loaded", data.length, "products");
         setFeaturedProducts(data);
       }
     } catch (error) {
-      console.error("HomePage: Error loading products:", error);
+      //console.error("HomePage: Error loading products:", error);
       setError("Failed to load products");
       toast.error("Failed to load products");
     } finally {

@@ -800,14 +800,20 @@ export function UserProfilePage({ onPageChange }: UserProfilePageProps) {
                     <Input
                       id="dateOfBirth"
                       type="date"
-                      value={profile.date_of_birth || ""}
+                      value={
+                        profile.date_of_birth
+                          ? new Date(profile.date_of_birth)
+                              .toISOString()
+                              .split("T")[0]
+                          : ""
+                      }
                       disabled={!editMode}
                       onChange={(e) =>
                         setProfile((prev) => {
                           if (!prev) return prev;
                           return {
                             ...prev,
-                            name: e.target.value,
+                            date_of_birth: e.target.value,
                           };
                         })
                       }

@@ -142,26 +142,26 @@ export default function App() {
           setAuthLoading(false);
 
           // If user just signed in via OAuth, create profile if needed
-          if (session?.user && !authLoading) {
-            try {
-              // Try to create user profile for OAuth users
-              const response = await fetch(`${env.supabase.apiUrl}/profile`, {
-                method: "GET",
-                headers: {
-                  Authorization: `Bearer ${session.access_token}`,
-                },
-              });
+          // if (session?.user && !authLoading) {
+          //   try {
+          //     // Try to create user profile for OAuth users
+          //     const response = await fetch(`${env.supabase.apiUrl}/profile`, {
+          //       method: "GET",
+          //       headers: {
+          //         Authorization: `Bearer ${session.access_token}`,
+          //       },
+          //     });
 
-              if (response.ok) {
-                // console.log("User profile verified/created for OAuth user");
-              }
-            } catch (error) {
-              console.log(
-                "Note: Could not verify profile for OAuth user:",
-                error
-              );
-            }
-          }
+          //     if (response.ok) {
+          //       // console.log("User profile verified/created for OAuth user");
+          //     }
+          //   } catch (error) {
+          //     console.log(
+          //       "Note: Could not verify profile for OAuth user:",
+          //       error
+          //     );
+          //   }
+          // }
         }
 
         // Set up auth state listener
@@ -175,9 +175,9 @@ export default function App() {
             // Handle OAuth sign-in success
             if (event === "SIGNED_IN" && session?.user) {
               // console.log("User signed in:", session.user.email);
-              // toast.success(
-              //   `Welcome ${session.user.email}! You are now signed in.`
-              // );
+              toast.success(
+                `Welcome ${session.user.email}! You are now signed in.`
+              );
 
               // Try to create user profile for OAuth users
               try {
@@ -189,6 +189,7 @@ export default function App() {
                 });
 
                 if (response.ok) {
+                  toast.success("Your user profile is set up and ready to go!");
                   // console.log("User profile created/verified for OAuth user");
                 }
               } catch (error) {
@@ -207,13 +208,13 @@ export default function App() {
             const result = await dataManager.initializeData();
             if (mounted) {
               setDataInitialized(true);
-              console.log(
-                `✅ App data ready: ${result.message} (source: ${result.source})`
-              );
+              // console.log(
+              //   `✅ App data ready: ${result.message} (source: ${result.source})`
+              // );
 
               // Log data manager status
               const status = dataManager.getStatus();
-              console.log("📊 Data Manager Status:", status);
+              //console.log("📊 Data Manager Status:", status);
             }
           } catch (error) {
             console.warn(
@@ -369,17 +370,17 @@ export default function App() {
     error: cartHook.error,
   };
 
-  console.log("🔍 App Ready Check:", {
-    authLoading,
-    cartHook: cartHook ? "exists" : "null",
-    cartLoading: cartHook?.loading,
-    isReady: !authLoading && cartHook && !cartHook.loading,
-  });
+  // console.log("🔍 App Ready Check:", {
+  //   authLoading,
+  //   cartHook: cartHook ? "exists" : "null",
+  //   cartLoading: cartHook?.loading,
+  //   isReady: !authLoading && cartHook && !cartHook.loading,
+  // });
 
-  if (authLoading) {
-    console.log("⏳ Showing loading screen because auth is loading");
-    return console.log("⏳ Showing loading screen because auth is loading");
-  }
+  // if (authLoading) {
+  //   console.log("⏳ Showing loading screen because auth is loading");
+  //   return console.log("⏳ Showing loading screen because auth is loading");
+  // }
   // Show loading screen only if auth is still loading (allow app to work without backend)
   if (!isAppReady) {
     return (

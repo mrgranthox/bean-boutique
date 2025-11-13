@@ -1,5 +1,5 @@
-import { productsApi, adminApi } from './api';
-import { env } from './env';
+import { productsApi, adminApi } from "./api";
+import { env } from "./env";
 
 interface DataManagerOptions {
   useBackend?: boolean;
@@ -12,7 +12,7 @@ interface DataManagerOptions {
 interface CacheEntry<T> {
   data: T;
   timestamp: number;
-  source: 'backend' | 'local';
+  source: "backend" | "local";
 }
 
 class DataManager {
@@ -30,7 +30,7 @@ class DataManager {
       timeout: env.apiTimeout || 5000,
       cacheEnabled: env.features.enableAdvancedCaching !== false,
       cacheDuration: 300000, // 5 minutes default
-      ...options
+      ...options,
     };
   }
 
@@ -51,22 +51,26 @@ class DataManager {
       return null;
     }
 
-    console.log(`📦 Cache HIT for ${key} (age: ${Math.round(age / 1000)}s, source: ${entry.source})`);
+    // console.log(
+    //   `📦 Cache HIT for ${key} (age: ${Math.round(age / 1000)}s, source: ${
+    //     entry.source
+    //   })`
+    // );
     return entry.data as T;
   }
 
   /**
    * Store data in cache
    */
-  private setCache<T>(key: string, data: T, source: 'backend' | 'local'): void {
+  private setCache<T>(key: string, data: T, source: "backend" | "local"): void {
     if (!this.options.cacheEnabled) return;
 
     this.cache.set(key, {
       data,
       timestamp: Date.now(),
-      source
+      source,
     });
-    console.log(`💾 Cached ${key} from ${source}`);
+    //console.log(`💾 Cached ${key} from ${source}`);
   }
 
   /**
@@ -74,7 +78,7 @@ class DataManager {
    */
   public clearCache(): void {
     this.cache.clear();
-    console.log('🗑️ Cache cleared');
+    //console.log("🗑️ Cache cleared");
   }
 
   /**
@@ -82,7 +86,7 @@ class DataManager {
    */
   public clearCacheEntry(key: string): void {
     this.cache.delete(key);
-    console.log(`🗑️ Cache entry cleared: ${key}`);
+    //console.log(`🗑️ Cache entry cleared: ${key}`);
   }
 
   async checkBackendHealth(force: boolean = false): Promise<boolean> {
@@ -92,38 +96,45 @@ class DataManager {
 
     // Use cached health check if recent (unless forced)
     const now = Date.now();
-    if (!force && this.backendAvailable !== null && (now - this.lastHealthCheck) < this.healthCheckInterval) {
+    if (
+      !force &&
+      this.backendAvailable !== null &&
+      now - this.lastHealthCheck < this.healthCheckInterval
+    ) {
       return this.backendAvailable;
     }
 
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), this.options.timeout);
+      const timeoutId = setTimeout(
+        () => controller.abort(),
+        this.options.timeout
+      );
 
       const response = await fetch(`${env.supabase.apiUrl}/health`, {
         signal: controller.signal,
         headers: {
-          'Authorization': `Bearer ${env.supabase.anonKey}`
-        }
+          Authorization: `Bearer ${env.supabase.anonKey}`,
+        },
       });
 
       clearTimeout(timeoutId);
       this.lastHealthCheck = now;
-      
+
       if (response.ok) {
-        console.log('✅ Backend is healthy and available');
+        //console.log("✅ Backend is healthy and available");
         this.backendAvailable = true;
         return true;
       } else {
-        console.warn('⚠️ Backend responded but not healthy:', response.status);
+        //console.warn("⚠️ Backend responded but not healthy:", response.status);
         this.backendAvailable = false;
         return false;
       }
-    } catch (error) {
-      if (error.name === 'AbortError') {
-        console.warn('⚠️ Backend health check timed out');
+    } catch (error: any) {
+      if (error.name === "AbortError") {
+        //console.warn("⚠️ Backend health check timed out");
       } else {
-        console.warn('⚠️ Backend health check failed:', error.message);
+        //console.warn("⚠️ Backend health check failed:", error.message);
       }
       this.backendAvailable = false;
       this.lastHealthCheck = now;
@@ -131,12 +142,16 @@ class DataManager {
     }
   }
 
-  async initializeData(): Promise<{ success: boolean; message: string; source: 'backend' | 'local' }> {
+  async initializeData(): Promise<{
+    success: boolean;
+    message: string;
+    source: "backend" | "local";
+  }> {
     if (this.initializationAttempted) {
-      return { 
-        success: true, 
-        message: 'Data already initialized', 
-        source: this.backendAvailable ? 'backend' : 'local' 
+      return {
+        success: true,
+        message: "Data already initialized",
+        source: this.backendAvailable ? "backend" : "local",
       };
     }
 
@@ -144,43 +159,47 @@ class DataManager {
 
     // First check if backend is available
     const backendHealthy = await this.checkBackendHealth();
-    
+
     if (backendHealthy) {
       try {
-        console.log('🔄 Backend is healthy, verifying data...');
-        
+        // console.log("🔄 Backend is healthy, verifying data...");
+
         // Verify backend data exists
         const verification = await this.verifyBackendData();
         if (verification.success) {
-          console.log('✅ Backend data verified');
-          return { 
-            success: true, 
-            message: 'Backend data verified and ready', 
-            source: 'backend' 
+          //console.log("✅ Backend data verified");
+          return {
+            success: true,
+            message: "Backend data verified and ready",
+            source: "backend",
           };
         } else {
-          console.warn('⚠️ Backend is healthy but no data found. Please run migration SQL files.');
+          // console.warn(
+          //   "⚠️ Backend is healthy but no data found. Please run migration SQL files."
+          // );
           return {
             success: false,
-            message: 'Backend has no data. Please run the migration SQL files to populate the database.',
-            source: 'backend'
+            message:
+              "Backend has no data. Please run the migration SQL files to populate the database.",
+            source: "backend",
           };
         }
-      } catch (error) {
-        console.warn('⚠️ Backend verification error:', error.message);
+      } catch (error: any) {
+        //console.warn("⚠️ Backend verification error:", error.message);
         return {
           success: false,
           message: `Backend verification failed: ${error.message}`,
-          source: 'backend'
+          source: "backend",
         };
       }
     }
 
     // Backend unavailable
-    return { 
-      success: false, 
-      message: 'Backend is unavailable. Please check your connection and backend configuration.', 
-      source: 'local' 
+    return {
+      success: false,
+      message:
+        "Backend is unavailable. Please check your connection and backend configuration.",
+      source: "local",
     };
   }
 
@@ -188,15 +207,15 @@ class DataManager {
     try {
       const response = await productsApi.getProducts({ limit: 1 });
       const productCount = response?.products?.length || 0;
-      
-      console.log(`Backend verification: ${productCount} products found`);
-      
+
+      // console.log(`Backend verification: ${productCount} products found`);
+
       return {
         success: productCount > 0,
-        count: productCount
+        count: productCount,
       };
     } catch (error) {
-      console.warn('Backend verification failed:', error.message);
+      //console.warn("Backend verification failed:", error.message);
       return { success: false, count: 0 };
     }
   }
@@ -211,13 +230,17 @@ class DataManager {
   }): Promise<{
     products: any[];
     pagination: any;
-    source: 'backend' | 'local';
+    source: "backend" | "local";
   }> {
     // Generate cache key
     const cacheKey = `products:${JSON.stringify(params || {})}`;
-    
+
     // Check cache first
-    const cached = this.getCached<{ products: any[]; pagination: any; source: 'backend' | 'local' }>(cacheKey);
+    const cached = this.getCached<{
+      products: any[];
+      pagination: any;
+      source: "backend" | "local";
+    }>(cacheKey);
     if (cached) {
       return cached;
     }
@@ -225,31 +248,40 @@ class DataManager {
     // Try to fetch from backend
     try {
       const response = await productsApi.getProducts(params);
-      
+
       if (response && response.products) {
-        console.log(`✅ Got ${response.products.length} products from backend`);
+        // console.log(`✅ Got ${response.products.length} products from backend`);
         this.backendAvailable = true;
         const result = {
           ...response,
-          source: 'backend' as const
+          source: "backend" as const,
         };
-        this.setCache(cacheKey, result, 'backend');
+        this.setCache(cacheKey, result, "backend");
         return result;
       }
-    } catch (error) {
-      console.error('⚠️ Backend product fetch failed:', error.message);
+    } catch (error: any) {
+      //console.error("⚠️ Backend product fetch failed:", error.message);
       this.backendAvailable = false;
-      throw new Error(`Failed to fetch products from backend: ${error.message}`);
+      throw new Error(
+        `Failed to fetch products from backend: ${error.message}`
+      );
     }
 
     // If we reach here, backend failed and no fallback
-    throw new Error('Unable to fetch products. Please check your backend connection.');
+    throw new Error(
+      "Unable to fetch products. Please check your backend connection."
+    );
   }
 
-  async getProduct(id: string): Promise<{ product: any | null; source: 'backend' | 'local' }> {
+  async getProduct(
+    id: string
+  ): Promise<{ product: any | null; source: "backend" | "local" }> {
     // Check cache first
     const cacheKey = `product:${id}`;
-    const cached = this.getCached<{ product: any | null; source: 'backend' | 'local' }>(cacheKey);
+    const cached = this.getCached<{
+      product: any | null;
+      source: "backend" | "local";
+    }>(cacheKey);
     if (cached) {
       return cached;
     }
@@ -258,15 +290,18 @@ class DataManager {
     try {
       const response = await productsApi.getProduct(id);
       if (response?.product) {
-        const result = { product: response.product, source: 'backend' as const };
-        this.setCache(cacheKey, result, 'backend');
+        const result = {
+          product: response.product,
+          source: "backend" as const,
+        };
+        this.setCache(cacheKey, result, "backend");
         return result;
       }
-      
+
       // Product not found
-      return { product: null, source: 'backend' as const };
-    } catch (error) {
-      console.error('Backend product fetch failed:', error.message);
+      return { product: null, source: "backend" as const };
+    } catch (error: any) {
+      // console.error("Backend product fetch failed:", error.message);
       this.backendAvailable = false;
       throw new Error(`Failed to fetch product: ${error.message}`);
     }
@@ -284,7 +319,7 @@ class DataManager {
     return {
       backend: this.backendAvailable,
       initialized: this.initializationAttempted,
-      fallbackEnabled: this.options.fallbackToLocal || false
+      fallbackEnabled: this.options.fallbackToLocal || false,
     };
   }
 }
@@ -293,7 +328,7 @@ class DataManager {
 export const dataManager = new DataManager({
   useBackend: true,
   fallbackToLocal: false, // No fallback - show errors instead
-  timeout: 8000 // 8 second timeout
+  timeout: 8000, // 8 second timeout
 });
 
 // Legacy exports for backward compatibility
@@ -302,6 +337,6 @@ export async function checkAndInitializeData() {
   return {
     success: result.success,
     message: result.message,
-    error: result.success ? null : result.message
+    error: result.success ? null : result.message,
   };
 }

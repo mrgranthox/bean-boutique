@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { toast } from 'sonner';
+import { useState, useEffect } from "react";
+import { toast } from "sonner";
 
 interface CartItem {
   productId: string;
@@ -16,7 +16,7 @@ interface Cart {
   updated_at: string;
 }
 
-const CART_STORAGE_KEY = 'bean_boutique_cart';
+const CART_STORAGE_KEY = "bean_boutique_cart";
 
 // Helper function to load cart from localStorage
 function loadCartFromStorage(): Cart {
@@ -27,7 +27,7 @@ function loadCartFromStorage(): Cart {
       return cart;
     }
   } catch (error) {
-    console.error('Error loading cart from localStorage:', error);
+    // console.error('Error loading cart from localStorage:', error);
   }
   return { items: [], total: 0, updated_at: new Date().toISOString() };
 }
@@ -37,7 +37,7 @@ function saveCartToStorage(cart: Cart): void {
   try {
     localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
   } catch (error) {
-    console.error('Error saving cart to localStorage:', error);
+    // console.error('Error saving cart to localStorage:', error);
   }
 }
 
@@ -56,12 +56,15 @@ export function useLocalCart(user: any = null) {
     if (!user) {
       // Keep the cart in localStorage even when signed out
       // This allows users to add items before signing in
-      console.log('User signed out, cart persisted in localStorage');
+      //console.log('User signed out, cart persisted in localStorage');
     }
   }, [user]);
 
   // Add item to cart
-  const addToCart = async (productOrId: string | any, quantity: number = 1): Promise<boolean> => {
+  const addToCart = async (
+    productOrId: string | any,
+    quantity: number = 1
+  ): Promise<boolean> => {
     try {
       setLoading(true);
       setError(null);
@@ -72,18 +75,18 @@ export function useLocalCart(user: any = null) {
       let productPrice: number;
       let productImage: string;
 
-      if (typeof productOrId === 'object' && productOrId !== null) {
+      if (typeof productOrId === "object" && productOrId !== null) {
         // Product object passed
         productId = productOrId.id;
-        productName = productOrId.name || 'Product';
+        productName = productOrId.name || "Product";
         productPrice = productOrId.price || 0;
-        productImage = productOrId.image || '';
-      } else if (typeof productOrId === 'string') {
+        productImage = productOrId.image || "";
+      } else if (typeof productOrId === "string") {
         // Just ID passed - need to fetch product details
         productId = productOrId;
-        
+
         // Try to get product info from data-manager or show error
-        const { dataManager } = await import('../utils/data-manager');
+        const { dataManager } = await import("../utils/data-manager");
         try {
           const response = await dataManager.getProduct(productId);
           if (response.product) {
@@ -91,22 +94,22 @@ export function useLocalCart(user: any = null) {
             productPrice = response.product.price;
             productImage = response.product.image;
           } else {
-            throw new Error('Product not found');
+            throw new Error("Product not found");
           }
         } catch (err) {
-          console.error('Failed to fetch product details:', err);
-          toast.error('Unable to add item: Product information not available');
+          // console.error('Failed to fetch product details:', err);
+          toast.error("Unable to add item: Product information not available");
           return false;
         }
       } else {
-        console.error('Invalid product data:', productOrId);
-        toast.error('Invalid product');
+        //console.error('Invalid product data:', productOrId);
+        toast.error("Invalid product");
         return false;
       }
 
       if (!productId) {
-        console.error('useLocalCart: Invalid product ID:', productOrId);
-        toast.error('Invalid product');
+        // console.error('useLocalCart: Invalid product ID:', productOrId);
+        toast.error("Invalid product");
         return false;
       }
 
@@ -116,12 +119,14 @@ export function useLocalCart(user: any = null) {
         price: productPrice,
         image: productImage,
         quantity,
-        added_at: new Date().toISOString()
+        added_at: new Date().toISOString(),
       };
 
-      setCart(prevCart => {
+      setCart((prevCart) => {
         const updatedCart = { ...prevCart };
-        const existingIndex = updatedCart.items.findIndex(item => item.productId === productId);
+        const existingIndex = updatedCart.items.findIndex(
+          (item) => item.productId === productId
+        );
 
         if (existingIndex >= 0) {
           // Update existing item quantity
@@ -134,7 +139,7 @@ export function useLocalCart(user: any = null) {
 
         // Recalculate total
         updatedCart.total = updatedCart.items.reduce(
-          (sum, item) => sum + (item.price * item.quantity),
+          (sum, item) => sum + item.price * item.quantity,
           0
         );
         updatedCart.updated_at = new Date().toISOString();
@@ -144,9 +149,10 @@ export function useLocalCart(user: any = null) {
 
       return true;
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to add item to cart';
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to add item to cart";
       setError(errorMessage);
-      console.error('Add to cart error:', err);
+      // console.error('Add to cart error:', err);
       return false;
     } finally {
       setLoading(false);
@@ -154,19 +160,24 @@ export function useLocalCart(user: any = null) {
   };
 
   // Update item quantity
-  const updateQuantity = async (productId: string, quantity: number): Promise<boolean> => {
+  const updateQuantity = async (
+    productId: string,
+    quantity: number
+  ): Promise<boolean> => {
     try {
       setLoading(true);
       setError(null);
 
       if (quantity < 1) {
-        toast.error('Quantity must be at least 1');
+        toast.error("Quantity must be at least 1");
         return false;
       }
 
-      setCart(prevCart => {
+      setCart((prevCart) => {
         const updatedCart = { ...prevCart };
-        const itemIndex = updatedCart.items.findIndex(item => item.productId === productId);
+        const itemIndex = updatedCart.items.findIndex(
+          (item) => item.productId === productId
+        );
 
         if (itemIndex >= 0) {
           updatedCart.items[itemIndex].quantity = quantity;
@@ -174,7 +185,7 @@ export function useLocalCart(user: any = null) {
 
           // Recalculate total
           updatedCart.total = updatedCart.items.reduce(
-            (sum, item) => sum + (item.price * item.quantity),
+            (sum, item) => sum + item.price * item.quantity,
             0
           );
           updatedCart.updated_at = new Date().toISOString();
@@ -185,9 +196,10 @@ export function useLocalCart(user: any = null) {
 
       return true;
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to update cart';
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to update cart";
       setError(errorMessage);
-      console.error('Update cart error:', err);
+      //console.error('Update cart error:', err);
       return false;
     } finally {
       setLoading(false);
@@ -200,13 +212,15 @@ export function useLocalCart(user: any = null) {
       setLoading(true);
       setError(null);
 
-      setCart(prevCart => {
+      setCart((prevCart) => {
         const updatedCart = { ...prevCart };
-        updatedCart.items = updatedCart.items.filter(item => item.productId !== productId);
+        updatedCart.items = updatedCart.items.filter(
+          (item) => item.productId !== productId
+        );
 
         // Recalculate total
         updatedCart.total = updatedCart.items.reduce(
-          (sum, item) => sum + (item.price * item.quantity),
+          (sum, item) => sum + item.price * item.quantity,
           0
         );
         updatedCart.updated_at = new Date().toISOString();
@@ -216,9 +230,10 @@ export function useLocalCart(user: any = null) {
 
       return true;
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to remove item';
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to remove item";
       setError(errorMessage);
-      console.error('Remove from cart error:', err);
+      // console.error('Remove from cart error:', err);
       return false;
     } finally {
       setLoading(false);
@@ -227,7 +242,11 @@ export function useLocalCart(user: any = null) {
 
   // Clear entire cart
   const clearCart = () => {
-    const emptyCart = { items: [], total: 0, updated_at: new Date().toISOString() };
+    const emptyCart = {
+      items: [],
+      total: 0,
+      updated_at: new Date().toISOString(),
+    };
     setCart(emptyCart);
     saveCartToStorage(emptyCart);
   };
@@ -238,7 +257,10 @@ export function useLocalCart(user: any = null) {
     setCart(storedCart);
   };
 
-  const cartItemCount = cart.items.reduce((sum, item) => sum + item.quantity, 0);
+  const cartItemCount = cart.items.reduce(
+    (sum, item) => sum + item.quantity,
+    0
+  );
 
   return {
     cart,
@@ -249,6 +271,6 @@ export function useLocalCart(user: any = null) {
     updateQuantity,
     removeItem,
     clearCart,
-    refreshCart
+    refreshCart,
   };
 }
