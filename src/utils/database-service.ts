@@ -809,7 +809,7 @@ export async function deleteUserAddress(
 
 export async function getUserProfileData(userId: string) {
   const [profileRes, ordersRes, subscriptionsRes] = await Promise.all([
-    supabase.from("profiles").select("*").eq("user_id", userId).single(),
+    supabase.from("profiles").select("*").eq("user_id", userId).maybeSingle(),
     getUserOrders(userId),
     getUserSubscriptions(userId),
   ]);

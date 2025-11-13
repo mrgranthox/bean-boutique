@@ -174,19 +174,68 @@ export function UserProfilePage({ onPageChange }: UserProfilePageProps) {
 
   const { addToCart } = useCart();
 
-  // console.log(user);
+  //console.log(user);
+
   const loadUserData = async () => {
     setDataLoading(true);
+
     try {
-      const { profile, orders, subscriptions } = await getUserProfileData(
-        user!.id
-      );
+      // Fetch existing data
+      const {
+        profile: fetchedProfile,
+        orders,
+        subscriptions,
+      } = await getUserProfileData(user!.id);
+
+      let profile = fetchedProfile; // ✅ make it mutable
+
+      // ✅ If no profile exists, create one automatically
+      if (!profile) {
+        const { data: authUser } = await supabase.auth.getUser();
+        if (!authUser?.user) {
+          console.error("Auth user not found yet");
+          return;
+        }
+
+        const fullName =
+          user.user_metadata?.full_name ||
+          user.user_metadata?.name ||
+          user.user_metadata?.given_name +
+            " " +
+            user.user_metadata?.family_name ||
+          user.email?.split("@")[0] ||
+          "";
+        const { data: newProfile, error: insertError } = await supabase
+          .from("profiles")
+          .insert([
+            {
+              user_id: authUser.user.id,
+              full_name: fullName
+                ? fullName
+                : authUser.user.user_metadata?.full_name || "",
+              email: authUser.user.email,
+              addresses: [],
+              updated_at: new Date().toISOString(),
+            },
+          ])
+          .select()
+          .single();
+
+        if (insertError) {
+          //console.error("Error creating new profile:", insertError);
+          return;
+        }
+
+        profile = newProfile;
+      }
+
+      // ✅ Update state
       setProfile(profile);
       setOrders(orders);
       setSubscriptions(subscriptions);
       setBackendAvailable(true);
 
-      console.log("Loaded user data:", { profile, orders, subscriptions });
+      // console.log("Loaded user data:", { profile, orders, subscriptions });
     } catch (error) {
       console.error("Error loading user data:", error);
       setBackendAvailable(false);
@@ -225,7 +274,7 @@ export function UserProfilePage({ onPageChange }: UserProfilePageProps) {
       //await loadUserData();
       toast.success("Profile updated successfully!");
     } catch (error) {
-      console.error("Profile update error:", error);
+      //console.error("Profile update error:", error);
       toast.error("Failed to update profile. Please try again.");
     }
   };
@@ -251,7 +300,7 @@ export function UserProfilePage({ onPageChange }: UserProfilePageProps) {
         updatedAddress as Address,
       ];
 
-      console.log("Updated addresses:", updatedAddresses);
+      //console.log("Updated addresses:", updatedAddresses);
 
       const { data, error } = await supabase
         .from("profiles")
@@ -260,7 +309,7 @@ export function UserProfilePage({ onPageChange }: UserProfilePageProps) {
         .select();
 
       if (error) {
-        console.error("Supabase update error:", error);
+        //console.error("Supabase update error:", error);
         toast.error("Failed to update address. Please try again.");
         return;
       }
@@ -277,7 +326,7 @@ export function UserProfilePage({ onPageChange }: UserProfilePageProps) {
 
       toast.success("Address updated successfully!");
     } catch (error) {
-      console.error("Address update error:", error);
+      //console.error("Address update error:", error);
       toast.error("Failed to update address. Please try again.");
     }
   };
@@ -292,7 +341,7 @@ export function UserProfilePage({ onPageChange }: UserProfilePageProps) {
       const updatedAddresses = (profile?.addresses || []).filter(
         (addr) => addr.id !== id
       );
-      console.log("Updated addresses:", updatedAddresses);
+      // console.log("Updated addresses:", updatedAddresses);
 
       const { data, error } = await supabase
         .from("profiles")
@@ -301,7 +350,7 @@ export function UserProfilePage({ onPageChange }: UserProfilePageProps) {
         .select();
 
       if (error) {
-        console.error("Supabase update error:", error);
+        //console.error("Supabase update error:", error);
         toast.error("Failed to delete address. Please try again.");
         return;
       }
@@ -319,7 +368,7 @@ export function UserProfilePage({ onPageChange }: UserProfilePageProps) {
 
       toast.success("Address deleted successfully!");
     } catch (error) {
-      console.error("Error deleting address:", error);
+      // console.error("Error deleting address:", error);
       toast.error("Failed to delete address. Please try again.");
     }
   };
@@ -380,7 +429,7 @@ export function UserProfilePage({ onPageChange }: UserProfilePageProps) {
         .select();
 
       if (error) {
-        console.error("Supabase update error:", error);
+        // console.error("Supabase update error:", error);
         toast.error("Failed to add address. Please try again.");
         return;
       }
@@ -403,7 +452,7 @@ export function UserProfilePage({ onPageChange }: UserProfilePageProps) {
       setShowAddAddress(false);
       toast.success("Address added successfully!");
     } catch (error) {
-      console.error("Address creation error:", error);
+      // console.error("Address creation error:", error);
       toast.error("Failed to add address. Please try again.");
     }
   };
@@ -437,7 +486,7 @@ export function UserProfilePage({ onPageChange }: UserProfilePageProps) {
       );
       toast.success("Subscription updated successfully!");
     } catch (error) {
-      console.error("Subscription update error:", error);
+      // console.error("Subscription update error:", error);
       // Fall back to local update
       setSubscriptions((prev) =>
         prev.map((sub) =>
@@ -467,7 +516,7 @@ export function UserProfilePage({ onPageChange }: UserProfilePageProps) {
       setProfile(response.profile);
       toast.success("Preferences saved successfully!");
     } catch (error) {
-      console.error("Preferences update error:", error);
+      // console.error("Preferences update error:", error);
       toast.success(
         "Preferences saved locally! Changes will sync when connection is restored."
       );
@@ -475,10 +524,10 @@ export function UserProfilePage({ onPageChange }: UserProfilePageProps) {
   };
 
   const handleReorder = async (order: any) => {
-    console.log("Reordering items from order:", order);
+    // console.log("Reordering items from order:", order);
 
     if (!order?.order_items?.length) {
-      console.warn("No items found for reorder.");
+      // console.warn("No items found for reorder.");
       return;
     }
 
@@ -564,7 +613,7 @@ export function UserProfilePage({ onPageChange }: UserProfilePageProps) {
     );
   }
 
-  if (!profile) {
+  if (!profile || !user) {
     return (
       <div className="min-h-screen bg-background py-8">
         <div className="container mx-auto px-4">
@@ -696,7 +745,9 @@ export function UserProfilePage({ onPageChange }: UserProfilePageProps) {
                     <Label htmlFor="name">Full Name</Label>
                     <Input
                       id="name"
-                      value={profile.full_name}
+                      value={
+                        profile.full_name || user.user_metadata.full_name || ""
+                      }
                       disabled={!editMode}
                       onChange={(e) =>
                         setProfile((prev) => {
@@ -731,7 +782,7 @@ export function UserProfilePage({ onPageChange }: UserProfilePageProps) {
                     <Label htmlFor="phone">Phone Number</Label>
                     <Input
                       id="phone"
-                      value={profile.phone || ""}
+                      value={profile.phone || user.user_metadata.phone || ""}
                       disabled={!editMode}
                       onChange={(e) =>
                         setProfile((prev) => {
