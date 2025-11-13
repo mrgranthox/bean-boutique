@@ -1,4 +1,5 @@
 import { env } from "./env";
+import { supabase } from "./supabase/client";
 
 const API_BASE_URL = env.supabase.apiUrl;
 
@@ -10,26 +11,38 @@ interface ApiOptions {
 }
 
 // Get auth token from Supabase client
-async function getAuthToken(): Promise<string | null> {
+export async function getAuthToken(): Promise<string | null> {
   try {
-    // Import auth client - use the named exports
-    const { auth } = await import("./supabase/client");
-
-    if (!auth) {
-      console.warn("Auth client not available");
-      return null;
-    }
-
-    const { session, error } = await auth.getSession();
+    const { data, error } = await supabase.auth.getSession();
 
     if (error) {
-      console.warn("Auth session error:", error);
+      //console.warn("Auth session error:", error.message);
       return null;
     }
 
-    return session?.access_token || null;
-  } catch (error) {
-    console.warn("Failed to get auth token:", error);
+    let session = data?.session;
+
+    // If there's no session, try to refresh it
+    if (!session) {
+      const { data: refreshed, error: refreshError } =
+        await supabase.auth.refreshSession();
+
+      if (refreshError) {
+        //console.warn("Auth refresh error:", refreshError.message);
+        return null;
+      }
+
+      session = refreshed?.session;
+    }
+
+    if (!session?.access_token) {
+      // console.warn("No access token found in session");
+      return null;
+    }
+
+    return session.access_token;
+  } catch (err) {
+    console.warn("Failed to get auth token:", err);
     return null;
   }
 }

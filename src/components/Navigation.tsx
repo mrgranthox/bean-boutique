@@ -54,13 +54,13 @@ const navigationItems = [
   },
   {
     page: "coffee" as Page,
-    label: "Coffee Selection",
+    label: "Coffee",
     icon: Coffee,
     description: "Premium coffee beans from around the world",
   },
   {
     page: "equipment" as Page,
-    label: "Brewing Equipment",
+    label: "Equipment",
     icon: Wrench,
     description: "Professional brewing tools & accessories",
   },
@@ -72,7 +72,7 @@ const navigationItems = [
   },
   {
     page: "offers" as Page,
-    label: "Special Offers",
+    label: "Offers",
     icon: Tag,
     description: "Exclusive deals and promotions",
   },
@@ -151,10 +151,6 @@ function AuthComponent({
           <DropdownMenuItem onClick={() => onPageChange?.("admin")}>
             <UserCog className="h-4 w-4 mr-2" />
             Admin Dashboard
-          </DropdownMenuItem>
-          <DropdownMenuItem>
-            <Settings className="h-4 w-4 mr-2" />
-            Settings
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={signOut}>

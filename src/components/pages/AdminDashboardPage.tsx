@@ -283,7 +283,7 @@ export function AdminDashboardPage({ onPageChange }: AdminDashboardPageProps) {
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <div className="overflow-x-auto overflow-y-hidden -mx-4 px-4 scrollbar-hide">
-            <TabsList className="inline-flex w-full min-w-max md:grid md:w-full md:grid-cols-9 bg-card gap-1">
+            <TabsList className="inline-flex w-full min-w-max md:grid md:w-full md:grid-cols-9 gap-1">
               <TabsTrigger
                 value="overview"
                 className="flex items-center gap-1 md:gap-2 text-xs md:text-sm whitespace-nowrap"

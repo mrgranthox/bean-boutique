@@ -11,6 +11,8 @@ import { ArrowLeft, CreditCard, Truck, ShieldCheck, Lock } from "lucide-react";
 import { toast } from "sonner";
 import { useCart } from "../../App";
 import type { Page } from "../../App";
+import { log } from "console";
+import { getAuthToken } from "../../utils/api";
 
 interface CheckoutPageProps {
   onPageChange: (page: Page) => void;
@@ -84,6 +86,9 @@ export function CheckoutPage({ onPageChange }: CheckoutPageProps) {
   };
 
   const handlePlaceOrder = async () => {
+    //const token = await getAuthToken();
+    // console.log("Token received:", token ? token.slice(0, 15) + "..." : "null");
+
     try {
       // Create order object
       const orderData = {
@@ -124,13 +129,14 @@ export function CheckoutPage({ onPageChange }: CheckoutPageProps) {
       const { ordersApi } = await import("../../utils/api");
       await ordersApi.createOrder(orderData);
 
+      //console.log("Order placed:", orderData);
       toast.success(
         "Order placed successfully! You will receive a confirmation email shortly."
       );
       clearCart();
       onPageChange("home");
     } catch (error) {
-      console.error("Order placement error:", error);
+      //console.error("Order placement error:", error);
       // Still show success to user even if backend fails
       toast.success(
         "Order placed successfully! You will receive a confirmation email shortly."
@@ -170,15 +176,16 @@ export function CheckoutPage({ onPageChange }: CheckoutPageProps) {
           <h1 className="text-3xl md:text-4xl mb-2">Checkout</h1>
 
           {/* Progress Steps */}
-          <div className="flex items-center gap-4 mt-6">
+          <div className="flex items-center justify-between mt-6 w-full">
             {[
               { number: 1, title: "Shipping" },
               { number: 2, title: "Payment" },
               { number: 3, title: "Review" },
-            ].map((stepItem) => (
-              <div key={stepItem.number} className="flex items-center gap-2">
+            ].map((stepItem, idx) => (
+              <div key={stepItem.number} className="flex items-center flex-1">
+                {/* Step Circle */}
                 <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center text-sm ${
+                  className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-sm sm:text-base flex-shrink-0 ${
                     step >= stepItem.number
                       ? "bg-primary text-primary-foreground"
                       : "bg-muted text-muted-foreground"
@@ -186,8 +193,10 @@ export function CheckoutPage({ onPageChange }: CheckoutPageProps) {
                 >
                   {stepItem.number}
                 </div>
+
+                {/* Step Title */}
                 <span
-                  className={`text-sm ${
+                  className={`ml-2 text-xs sm:text-sm whitespace-nowrap ${
                     step >= stepItem.number
                       ? "text-foreground"
                       : "text-muted-foreground"
@@ -195,8 +204,14 @@ export function CheckoutPage({ onPageChange }: CheckoutPageProps) {
                 >
                   {stepItem.title}
                 </span>
-                {stepItem.number < 3 && (
-                  <div className="w-8 h-0.5 bg-muted mx-2"></div>
+
+                {/* Connector Line */}
+                {idx < 2 && (
+                  <div
+                    className={`flex-1 h-0.5 mx-2 ${
+                      step > stepItem.number ? "bg-primary" : "bg-muted"
+                    }`}
+                  ></div>
                 )}
               </div>
             ))}

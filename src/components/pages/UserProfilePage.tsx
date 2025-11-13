@@ -193,7 +193,7 @@ export function UserProfilePage({ onPageChange }: UserProfilePageProps) {
       if (!profile) {
         const { data: authUser } = await supabase.auth.getUser();
         if (!authUser?.user) {
-          console.error("Auth user not found yet");
+          //console.error("Auth user not found yet");
           return;
         }
 
