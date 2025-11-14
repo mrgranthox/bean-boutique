@@ -187,7 +187,7 @@ export function SubscriptionPage({ onPageChange }: SubscriptionPageProps) {
 
       // Optionally redirect to account page to view subscription
       setTimeout(() => {
-        onPageChange("account");
+        onPageChange("profile");
       }, 2000);
     } catch (error) {
       console.error("Error processing subscription:", error);
