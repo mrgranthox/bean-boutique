@@ -140,6 +140,70 @@ export function useLocalCart(user: any = null) {
     }
   };
 
+  // Add this inside useLocalCart, alongside addToCart
+  const addSubscriptionToCart = async (plan: {
+    id: string;
+    name: string;
+    price: number;
+    interval: string;
+  }): Promise<boolean> => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      if (!plan || !plan.id) {
+        toast.error("Invalid subscription plan");
+        return false;
+      }
+
+      // Create a unique ID for subscription in cart (prefix to avoid collisions)
+      const productId = `sub_${plan.id}`;
+
+      const newItem: CartItem = {
+        productId,
+        name: `${plan.name} (${plan.interval})`,
+        price: plan.price,
+        image: "", // Optional: you can set a default subscription image
+        quantity: 1,
+        added_at: new Date().toISOString(),
+      };
+
+      setCart((prevCart) => {
+        const updated = { ...prevCart };
+        const existingIndex = updated.items.findIndex(
+          (item) => item.productId === productId
+        );
+
+        if (existingIndex >= 0) {
+          updated.items[existingIndex].quantity += 1;
+          updated.items[existingIndex].added_at = new Date().toISOString();
+        } else {
+          updated.items.push(newItem);
+        }
+
+        updated.total = updated.items.reduce(
+          (sum, item) => sum + item.price * item.quantity,
+          0
+        );
+        updated.updated_at = new Date().toISOString();
+        return updated;
+      });
+
+      toast.success(`Added ${plan.name} to cart`);
+      return true;
+    } catch (err) {
+      const msg =
+        err instanceof Error
+          ? err.message
+          : "Failed to add subscription to cart";
+      setError(msg);
+      toast.error(msg);
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Update quantity
   const updateQuantity = async (
     productId: string,
@@ -228,6 +292,7 @@ export function useLocalCart(user: any = null) {
     loading,
     error,
     addToCart,
+    addSubscriptionToCart,
     updateQuantity,
     removeItem,
     clearCart,

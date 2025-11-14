@@ -330,10 +330,12 @@ export async function getPromotions(options?: {
 // ==========================================
 
 export interface SubscriptionPlan {
+  coffee_quantity: number;
   id: string;
   name: string;
   description: string;
   price: number;
+  interval: string;
   billing_period: string;
   features: string[];
   popular?: boolean;
@@ -348,74 +350,6 @@ export async function getSubscriptionPlans(): Promise<{
   error?: any;
 }> {
   try {
-    // For now, return predefined subscription plans
-    // In future, this could come from a subscriptions_plans table
-    // const plans: SubscriptionPlan[] = [
-    //   {
-    //     id: "starter",
-    //     name: "Starter",
-    //     description: "Perfect for occasional coffee lovers",
-    //     price: 19.99,
-    //     billing_period: "monthly",
-    //     delivery_frequency: "Monthly",
-    //     bag_size: "12 oz",
-    //     features: [
-    //       "12 oz bag per month",
-    //       "Choose from 5 signature blends",
-    //       "Free shipping",
-    //       "Cancel anytime",
-    //     ],
-    //     customization_options: ["Grind preference", "Roast level"],
-    //   },
-    //   {
-    //     id: "enthusiast",
-    //     name: "Enthusiast",
-    //     description: "For true coffee enthusiasts",
-    //     price: 34.99,
-    //     billing_period: "monthly",
-    //     delivery_frequency: "Bi-weekly",
-    //     bag_size: "16 oz",
-    //     popular: true,
-    //     features: [
-    //       "2x 16 oz bags per month",
-    //       "Access to limited editions",
-    //       "Tasting notes included",
-    //       "Priority support",
-    //       "Free shipping",
-    //     ],
-    //     customization_options: [
-    //       "Grind preference",
-    //       "Roast level",
-    //       "Flavor profile",
-    //       "Origin preference",
-    //     ],
-    //   },
-    //   {
-    //     id: "connoisseur",
-    //     name: "Connoisseur",
-    //     description: "Ultimate coffee experience",
-    //     price: 59.99,
-    //     billing_period: "monthly",
-    //     delivery_frequency: "Weekly",
-    //     bag_size: "20 oz",
-    //     features: [
-    //       "4x 20 oz bags per month",
-    //       "Exclusive micro-lots",
-    //       "Virtual tasting sessions",
-    //       "Personalized recommendations",
-    //       "Free express shipping",
-    //       "Early access to new releases",
-    //     ],
-    //     customization_options: [
-    //       "Grind preference",
-    //       "Roast level",
-    //       "Flavor profile",
-    //       "Origin preference",
-    //       "Processing method",
-    //     ],
-    //   },
-    // ];
-
     const { data, error } = await supabase
       .from("subscription_plan")
       .select("*")
@@ -432,6 +366,40 @@ export async function getSubscriptionPlans(): Promise<{
   } catch (error) {
     console.error("Exception fetching subscription plans:", error);
     return { data: [], error };
+  }
+}
+
+export async function createSubscription(
+  userId: string,
+  plan: {
+    id: string;
+    name: string;
+    price: number;
+    interval: "monthly" | "quarterly" | "yearly";
+    quantity: number;
+  }
+): Promise<{ data: any; error?: any }> {
+  try {
+    const { data, error } = await supabase.from("subscriptions").insert({
+      user_id: userId,
+      plan_id: plan.id,
+      plan_name: plan.name,
+      frequency: plan.interval, // must be monthly/quarterly/yearly
+      quantity: plan.quantity,
+      price: plan.price,
+      start_date: new Date().toISOString(),
+      status: "active",
+    });
+
+    if (error) {
+      console.error("Error creating subscription:", error);
+      return { data: null, error };
+    }
+
+    return { data: data?.[0] ?? null };
+  } catch (err) {
+    console.error("Exception creating subscription:", err);
+    return { data: null, error: err };
   }
 }
 

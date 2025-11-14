@@ -64,6 +64,12 @@ interface AuthContextType {
 interface CartContextType {
   cart: any;
   cartItemCount: number;
+  addSubscriptionToCart: (plan: {
+    id: string;
+    name: string;
+    price: number;
+    interval: string;
+  }) => Promise<boolean>;
   addToCart: (productId: string, quantity?: number) => Promise<boolean>;
   updateQuantity: (productId: string, quantity: number) => Promise<boolean>;
   removeFromCart: (productId: string) => Promise<boolean>;
@@ -362,6 +368,7 @@ export default function App() {
     cart: cartHook.cart,
     cartItemCount: cartHook.cartItemCount,
     addToCart: cartHook.addToCart,
+    addSubscriptionToCart: cartHook.addSubscriptionToCart,
     updateQuantity: cartHook.updateQuantity,
     removeFromCart: cartHook.removeItem,
     clearCart: cartHook.clearCart,

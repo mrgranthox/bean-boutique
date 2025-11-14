@@ -8,6 +8,15 @@ import {
 } from "../ui/card";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
+import { Input } from "../ui/input";
+import { Label } from "../ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "../ui/dialog";
 import {
   Check,
   Coffee,
@@ -17,13 +26,16 @@ import {
   Calendar,
   Settings,
   Loader2,
+  CreditCard,
+  Lock,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
   getSubscriptionPlans,
+  createSubscription,
   type SubscriptionPlan,
 } from "../../utils/database-service";
-import { useCart } from "../../App";
+import { useAuth, useCart } from "../../App";
 import type { Page } from "../../App";
 
 interface SubscriptionPageProps {
@@ -31,17 +43,36 @@ interface SubscriptionPageProps {
 }
 
 export function SubscriptionPage({ onPageChange }: SubscriptionPageProps) {
-  const { addToCart } = useCart();
-  const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
+  const { addSubscriptionToCart } = useCart();
+  const { user } = useAuth();
+  const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan | null>(
+    null
+  );
   const [billingPeriod, setBillingPeriod] = useState<"monthly" | "annual">(
     "monthly"
   );
   const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showCheckoutModal, setShowCheckoutModal] = useState(false);
+  const [processingPayment, setProcessingPayment] = useState(false);
+
+  // Form state
+  const [email, setEmail] = useState("");
+  const [cardNumber, setCardNumber] = useState("");
+  const [cardExpiry, setCardExpiry] = useState("");
+  const [cardCvc, setCvc] = useState("");
+  const [cardName, setCardName] = useState("");
 
   useEffect(() => {
     loadPlans();
   }, []);
+
+  // Prefill email when user is signed in
+  useEffect(() => {
+    if (user?.email) {
+      setEmail(user.email);
+    }
+  }, [user]);
 
   const loadPlans = async () => {
     try {
@@ -62,46 +93,137 @@ export function SubscriptionPage({ onPageChange }: SubscriptionPageProps) {
     }
   };
 
-  const handleSubscribe = async (plan: SubscriptionPlan) => {
+  const handleSubscribe = (plan: SubscriptionPlan) => {
+    setSelectedPlan(plan);
+    setShowCheckoutModal(true);
+  };
+
+  const handleCheckout = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!selectedPlan) return;
+
     try {
-      setSelectedPlan(plan.id);
+      setProcessingPayment(true);
+
+      // Validate form
+      if (!email || !cardNumber || !cardExpiry || !cardCvc || !cardName) {
+        toast.error("Please fill in all fields");
+        return;
+      }
+
+      // Basic email validation
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        toast.error("Please enter a valid email address");
+        return;
+      }
+
+      // Check if user is signed in
+      if (!user?.id) {
+        toast.error("Please sign in to subscribe");
+        return;
+      }
 
       // Calculate the final price based on billing period
       const finalPrice =
         billingPeriod === "annual"
-          ? Number((plan.price * 12 * 0.9).toFixed(2))
-          : plan.price;
+          ? Number((selectedPlan.price * 12 * 0.9).toFixed(2))
+          : selectedPlan.price;
 
-      // Create a subscription product object to add to cart
-      const subscriptionProduct = {
-        id: `subscription-${plan.id}-${billingPeriod}`,
-        name: `${plan.name} Subscription`,
-        description: `${plan.description} - ${
-          billingPeriod === "annual" ? "Annual" : "Monthly"
-        } billing`,
-        price: finalPrice,
-        image:
-          "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=400",
-        category: "Subscription",
+      // Simulate payment processing (replace with actual payment API like Stripe)
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+
+      // TODO: Replace with actual payment processing
+      // const paymentResult = await processPayment({
+      //   amount: finalPrice,
+      //   cardNumber,
+      //   cardExpiry,
+      //   cardCvc,
+      //   cardName,
+      //   email,
+      // });
+
+      // if (!paymentResult.success) {
+      //   throw new Error("Payment failed");
+      // }
+
+      // Create subscription in database
+      const frequencyMap: Record<string, "monthly" | "quarterly" | "yearly"> = {
+        monthly: "monthly",
+        annual: "yearly", // map "annual" to "yearly"
+        quarterly: "quarterly",
       };
 
-      // Add to cart
-      const success = await addToCart(subscriptionProduct.id, 1);
-
-      if (success) {
-        toast.success("Subscription added to cart!", {
-          description: "You can now proceed to checkout",
-          duration: 3000,
+      const { data: subscriptionData, error: subscriptionError } =
+        await createSubscription(user.id, {
+          id: selectedPlan.id,
+          name: selectedPlan.name,
+          price: selectedPlan.price,
+          interval: frequencyMap[billingPeriod], // mapped to valid frequency
+          quantity: selectedPlan.coffee_quantity, // default quantity
         });
-      } else {
-        setSelectedPlan(null);
-        toast.error("Failed to add subscription to cart");
+
+      if (subscriptionError) {
+        throw new Error("Failed to create subscription");
       }
+
+      if (subscriptionError) {
+        throw new Error("Failed to create subscription");
+      }
+
+      // subscriptionData now contains the inserted subscription row
+      toast.success("Subscription successfully created!");
+      console.log("✅ Subscription created:", subscriptionData);
+
+      toast.success("Subscription activated!", {
+        description: `You've successfully subscribed to ${selectedPlan.name}`,
+        duration: 5000,
+      });
+
+      // Reset form and close modal
+      setShowCheckoutModal(false);
+      resetForm();
+
+      // Optionally redirect to account page to view subscription
+      setTimeout(() => {
+        onPageChange("account");
+      }, 2000);
     } catch (error) {
-      console.error("Error adding subscription to cart:", error);
-      setSelectedPlan(null);
-      toast.error("Failed to add subscription to cart");
+      console.error("Error processing subscription:", error);
+      toast.error("Payment failed", {
+        description:
+          error instanceof Error
+            ? error.message
+            : "Please check your payment details and try again",
+      });
+    } finally {
+      setProcessingPayment(false);
     }
+  };
+
+  const resetForm = () => {
+    if (!user?.email) {
+      setEmail("");
+    }
+    setCardNumber("");
+    setCardExpiry("");
+    setCvc("");
+    setCardName("");
+  };
+
+  const formatCardNumber = (value: string) => {
+    const cleaned = value.replace(/\s/g, "");
+    const chunks = cleaned.match(/.{1,4}/g);
+    return chunks ? chunks.join(" ") : cleaned;
+  };
+
+  const formatExpiry = (value: string) => {
+    const cleaned = value.replace(/\D/g, "");
+    if (cleaned.length >= 2) {
+      return cleaned.slice(0, 2) + "/" + cleaned.slice(2, 4);
+    }
+    return cleaned;
   };
 
   const getPlanPrice = (plan: SubscriptionPlan) => {
@@ -250,11 +372,8 @@ export function SubscriptionPage({ onPageChange }: SubscriptionPageProps) {
                     className="w-full mt-6"
                     variant={plan.popular ? "default" : "outline"}
                     onClick={() => handleSubscribe(plan)}
-                    disabled={selectedPlan === plan.id}
                   >
-                    {selectedPlan === plan.id
-                      ? "Added to Cart!"
-                      : "Choose Plan"}
+                    Choose Plan
                   </Button>
                 </CardContent>
               </Card>
@@ -382,6 +501,147 @@ export function SubscriptionPage({ onPageChange }: SubscriptionPageProps) {
           </Button>
         </section>
       </div>
+
+      {/* Checkout Modal */}
+      <Dialog open={showCheckoutModal} onOpenChange={setShowCheckoutModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Complete Your Subscription</DialogTitle>
+            <DialogDescription>
+              {selectedPlan && (
+                <>
+                  {selectedPlan.name} - ${getPlanPrice(selectedPlan)}/
+                  {billingPeriod === "annual" ? "year" : "month"}
+                </>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+
+          <form onSubmit={handleCheckout} className="space-y-4 mt-4">
+            {/* Email Field */}
+            <div className="space-y-2">
+              <Label htmlFor="email">Email Address</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="your@email.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={!!user?.email}
+                required
+              />
+              {user && (
+                <p className="text-xs text-muted-foreground">
+                  Using your account email
+                </p>
+              )}
+            </div>
+
+            {/* Card Name */}
+            <div className="space-y-2">
+              <Label htmlFor="cardName">Cardholder Name</Label>
+              <Input
+                id="cardName"
+                type="text"
+                placeholder="John Doe"
+                value={cardName}
+                onChange={(e) => setCardName(e.target.value)}
+                required
+              />
+            </div>
+
+            {/* Card Number */}
+            <div className="space-y-2">
+              <Label htmlFor="cardNumber">Card Number</Label>
+              <div className="relative">
+                <Input
+                  id="cardNumber"
+                  type="text"
+                  placeholder="1234 5678 9012 3456"
+                  value={cardNumber}
+                  onChange={(e) => {
+                    const formatted = formatCardNumber(e.target.value);
+                    if (formatted.replace(/\s/g, "").length <= 16) {
+                      setCardNumber(formatted);
+                    }
+                  }}
+                  maxLength={19}
+                  required
+                />
+                <CreditCard className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              </div>
+            </div>
+
+            {/* Expiry and CVC */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="cardExpiry">Expiry Date</Label>
+                <Input
+                  id="cardExpiry"
+                  type="text"
+                  placeholder="MM/YY"
+                  value={cardExpiry}
+                  onChange={(e) => {
+                    const formatted = formatExpiry(e.target.value);
+                    if (formatted.replace(/\D/g, "").length <= 4) {
+                      setCardExpiry(formatted);
+                    }
+                  }}
+                  maxLength={5}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="cardCvc">CVC</Label>
+                <Input
+                  id="cardCvc"
+                  type="text"
+                  placeholder="123"
+                  value={cardCvc}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/\D/g, "");
+                    if (value.length <= 4) {
+                      setCvc(value);
+                    }
+                  }}
+                  maxLength={4}
+                  required
+                />
+              </div>
+            </div>
+
+            {/* Security Note */}
+            <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted/30 p-3 rounded-lg">
+              <Lock className="h-4 w-4 flex-shrink-0" />
+              <span>Your payment information is encrypted and secure</span>
+            </div>
+
+            {/* Submit Button */}
+            <Button
+              type="submit"
+              className="w-full"
+              size="lg"
+              disabled={processingPayment}
+            >
+              {processingPayment ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Processing...
+                </>
+              ) : (
+                <>
+                  Subscribe Now - ${selectedPlan && getPlanPrice(selectedPlan)}
+                </>
+              )}
+            </Button>
+
+            <p className="text-xs text-center text-muted-foreground">
+              By subscribing, you agree to our terms and conditions. You can
+              cancel anytime.
+            </p>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
