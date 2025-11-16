@@ -176,8 +176,8 @@ export function AdminDashboardPage({ onPageChange }: AdminDashboardPageProps) {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <h2 className="text-xl mb-2">Checking Admin Access</h2>
-          <p className="text-muted-foreground">Verifying credentials...</p>
+          {/* <h2 className="text-xl mb-2">Checking Admin Access</h2>
+          <p className="text-muted-foreground">Verifying credentials...</p> */}
         </div>
       </div>
     );
@@ -258,7 +258,7 @@ export function AdminDashboardPage({ onPageChange }: AdminDashboardPageProps) {
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
           <h2 className="text-xl mb-2">Loading Admin Dashboard</h2>
-          <p className="text-muted-foreground">Fetching data...</p>
+          {/* <p className="text-muted-foreground">Fetching data...</p> */}
         </div>
       </div>
     );

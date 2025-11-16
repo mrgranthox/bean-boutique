@@ -205,30 +205,8 @@ export function AdminCheckPage({ onPageChange }: AdminCheckPageProps) {
                       <div className="space-y-2">
                         <p className="font-medium">🔧 To get admin access:</p>
                         <ol className="list-decimal list-inside space-y-1 text-sm">
-                          <li>Open your Supabase project dashboard</li>
-                          <li>Go to the SQL Editor</li>
-                          <li>
-                            Run the{" "}
-                            <code className="bg-amber-100 px-1 rounded">
-                              SET_ADMIN_USER.sql
-                            </code>{" "}
-                            script
-                          </li>
-                          <li>
-                            Use email:{" "}
-                            <code className="bg-amber-100 px-1 rounded">
-                              {user.email}
-                            </code>
-                          </li>
-                          <li>Sign out and sign back in</li>
+                          <li>Contact Administrator</li>
                         </ol>
-                        <p className="text-sm mt-3">
-                          See{" "}
-                          <code className="bg-amber-100 px-1 rounded">
-                            ADMIN_ACCESS_FIX.md
-                          </code>{" "}
-                          for detailed instructions.
-                        </p>
                       </div>
                     </AlertDescription>
                   </Alert>

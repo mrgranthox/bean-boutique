@@ -98,7 +98,7 @@ export function AdminUserManagement() {
     try {
       setLoading(true);
 
-      const { getAllUsers } = await await import("../../../utils/admin-db");
+      const { getAllUsers } = await import("../../../utils/admin-db");
       const data = await getAllUsers();
       console.log("Raw user data from database:", data);
 

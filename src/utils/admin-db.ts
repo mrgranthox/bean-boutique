@@ -112,6 +112,7 @@ export async function isUserAdmin(): Promise<boolean> {
 
 export async function getDashboardStats() {
   try {
+    // 1️⃣ Get total counts efficiently
     const [
       ordersResult,
       usersResult,
@@ -119,32 +120,24 @@ export async function getDashboardStats() {
       eventsResult,
       subscriptionsResult,
     ] = await Promise.all([
-      supabase.from("orders").select("*"),
-      supabase.from("users").select("id"),
-      supabase.from("products").select("id"),
-      supabase.from("events").select("id"),
-      supabase.from("subscriptions").select("*").eq("status", "active"),
+      supabase.from("orders").select("*", { count: "exact" }),
+      supabase.from("users").select("id", { count: "exact" }),
+      supabase.from("products").select("id", { count: "exact" }),
+      supabase.from("events").select("id", { count: "exact" }),
+      supabase
+        .from("subscriptions")
+        .select("*", { count: "exact" })
+        .eq("status", "active"),
     ]);
 
-    // Calculate total revenue (exclude cancelled orders)
-    const totalRevenue =
-      ordersResult.data
-        ?.filter((o) => o.status !== "cancelled")
-        .reduce((sum, o) => sum + parseFloat(o.total || 0), 0) || 0;
-
-    // Get recent orders
+    // 2️⃣ Recent orders (limit 5)
     const { data: recentOrders } = await supabase
       .from("orders")
-      .select(
-        `
-        *,
-        users (email)
-      `
-      )
+      .select(`*, users (email)`)
       .order("created_at", { ascending: false })
       .limit(5);
 
-    // Get top products by sales
+    // 3️⃣ Top products by sales
     const { data: orderItems } = await supabase
       .from("order_items")
       .select("product_id, product_name, quantity, price");
@@ -167,31 +160,36 @@ export async function getDashboardStats() {
       .sort((a: any, b: any) => b.sales - a.sales)
       .slice(0, 5);
 
-    // Get monthly revenue (last 12 months)
+    // 4️⃣ Monthly revenue (last 12 months)
+    const lastYear = new Date();
+    lastYear.setFullYear(lastYear.getFullYear() - 1);
+
     const { data: monthlyOrders } = await supabase
       .from("orders")
       .select("created_at, total, status")
-      .gte(
-        "created_at",
-        new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString()
-      );
+      .gte("created_at", lastYear.toISOString());
 
     const monthlyRevenue = new Array(12).fill(0);
     monthlyOrders?.forEach((order) => {
       if (order.status !== "cancelled") {
-        const date = new Date(order.created_at);
-        const monthIndex = date.getMonth();
+        const monthIndex = new Date(order.created_at).getMonth();
         monthlyRevenue[monthIndex] += parseFloat(order.total || 0);
       }
     });
 
+    // 5️⃣ Total revenue calculation (exclude cancelled orders)
+    const totalRevenue =
+      monthlyOrders
+        ?.filter((o) => o.status !== "cancelled")
+        .reduce((sum, o) => sum + parseFloat(o.total || 0), 0) || 0;
+
     return {
-      totalOrders: ordersResult.data?.length || 0,
+      totalOrders: ordersResult.count || 0,
       totalRevenue,
-      totalUsers: usersResult.data?.length || 0,
-      totalProducts: productsResult.data?.length || 0,
-      totalEvents: eventsResult.data?.length || 0,
-      activeSubscriptions: subscriptionsResult.data?.length || 0,
+      totalUsers: usersResult.count || 0,
+      totalProducts: productsResult.count || 0,
+      totalEvents: eventsResult.count || 0,
+      activeSubscriptions: subscriptionsResult.count || 0,
       recentOrders:
         recentOrders?.map((o) => ({
           id: o.id,
