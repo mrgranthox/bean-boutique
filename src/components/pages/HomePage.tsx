@@ -345,7 +345,15 @@ export function HomePage({ onPageChange }: HomePageProps) {
                     key={product.id}
                     className="overflow-hidden group hover:shadow-lg transition-shadow"
                   >
-                    <div className="aspect-square relative">
+                    <div
+                      className="aspect-square relative"
+                      onClick={() =>
+                        handleViewProduct(
+                          product.id,
+                          product.category || "coffee"
+                        )
+                      }
+                    >
                       <ImageWithFallback
                         src={product.image_url || ""}
                         alt={product.name || "Product"}
@@ -375,7 +383,15 @@ export function HomePage({ onPageChange }: HomePageProps) {
                           size="sm"
                         />
                       </div>
-                      <h3 className="text-lg mb-2">
+                      <h3
+                        className="text-lg mb-2"
+                        onClick={() =>
+                          handleViewProduct(
+                            product.id,
+                            product.category || "coffee"
+                          )
+                        }
+                      >
                         {product.name || "Untitled Product"}
                       </h3>
                       <p className="text-sm text-muted-foreground mb-4">
@@ -400,7 +416,7 @@ export function HomePage({ onPageChange }: HomePageProps) {
                           )}
                         </div>
                         <div className="flex items-center gap-2">
-                          <Button
+                          {/* <Button
                             variant="secondary"
                             size="sm"
                             onClick={() =>
@@ -411,7 +427,7 @@ export function HomePage({ onPageChange }: HomePageProps) {
                             }
                           >
                             View Details
-                          </Button>
+                          </Button>  */}
                           <Button
                             size="sm"
                             onClick={() => handleAddToCart(product.id)}
