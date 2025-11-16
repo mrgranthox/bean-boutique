@@ -1,6 +1,6 @@
 import { supabase } from "./supabase/client";
 
-export type ImageEntity = "products" | "profiles" | "plans" | "users";
+export type ImageEntity = "products" | "profiles" | "events" | "users";
 
 interface ImageData {
   path: string;

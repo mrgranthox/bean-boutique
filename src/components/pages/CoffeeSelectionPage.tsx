@@ -91,27 +91,34 @@ export function CoffeeSelectionPage({
   ).sort();
 
   // Refetch when filters change
+  // Refetch whenever filters or pagination change
   useEffect(() => {
-    if (backendProducts.length > 0) {
-      refetch({
-        category: "coffee",
-        page: currentPage,
-        limit: itemsPerPage,
-        search: filters.search || undefined,
-        sortBy:
-          sortBy === "featured"
-            ? "name"
-            : sortBy === "price-low"
-            ? "price"
-            : sortBy === "price-high"
-            ? "price"
-            : sortBy,
-        sortOrder: sortBy === "price-high" ? "desc" : "asc",
-      });
-    }
-  }, [currentPage, itemsPerPage, filters.search, sortBy]);
+    const backendPayload: any = {
+      category: "coffee",
+      page: currentPage,
+      limit: itemsPerPage,
+      search: filters.search || undefined,
+      origin: filters.origin || undefined,
+      roastLevel: filters.roastLevel || undefined,
+      minPrice: filters.priceRange?.split("-")?.[0],
+      maxPrice: filters.priceRange?.split("-")?.[1],
+      inStock: filters.inStock || undefined,
+      onSale: filters.onSale || undefined,
+      sortBy:
+        sortBy === "featured"
+          ? "name"
+          : sortBy === "price-low"
+          ? "price"
+          : sortBy === "price-high"
+          ? "price"
+          : sortBy,
+      sortOrder: sortBy === "price-high" ? "desc" : "asc",
+    };
 
-  // Apply filters and search (client-side for non-search filters when using backend)
+    // Trigger refetch
+    refetch(backendPayload);
+  }, [currentPage, itemsPerPage, filters, sortBy]);
+
   const filteredCoffees = useMemo(() => {
     let result = allProducts;
 
@@ -264,7 +271,7 @@ export function CoffeeSelectionPage({
   };
 
   const clearFilters = () => {
-    setFilters({
+    const cleared = {
       search: "",
       origin: "",
       roastLevel: "",
@@ -272,8 +279,29 @@ export function CoffeeSelectionPage({
       certifications: [],
       inStock: false,
       onSale: false,
-    });
+    };
+
+    setFilters(cleared);
     setCurrentPage(1);
+
+    // Trigger backend refetch explicitly
+    if (backendProducts.length > 0) {
+      refetch({
+        category: "coffee",
+        page: 1,
+        limit: itemsPerPage,
+        search: undefined, // explicitly clear search
+        sortBy:
+          sortBy === "featured"
+            ? "name"
+            : sortBy === "price-low"
+            ? "price"
+            : sortBy === "price-high"
+            ? "price"
+            : sortBy,
+        sortOrder: sortBy === "price-high" ? "desc" : "asc",
+      });
+    }
   };
 
   const hasActiveFilters = Object.values(filters).some((value) =>
@@ -396,7 +424,7 @@ export function CoffeeSelectionPage({
                   </Select>
 
                   {/* Filter Toggle */}
-                  <Button
+                  {/* <Button
                     variant="outline"
                     onClick={() => setShowFilters(!showFilters)}
                     className="md:w-auto"
@@ -408,7 +436,7 @@ export function CoffeeSelectionPage({
                         !
                       </Badge>
                     )}
-                  </Button>
+                  </Button> */}
                 </div>
 
                 {/* Expandable Filters */}

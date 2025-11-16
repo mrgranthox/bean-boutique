@@ -103,63 +103,31 @@ export function BrewingEquipmentPage({
     new Set(allProducts.map((e) => e.brand).filter(Boolean))
   ).sort();
 
-  // Refetch when filters change
+  // 1️⃣ Single refetch effect
   useEffect(() => {
-    if (backendProducts.length > 0) {
-      refetch({
-        category: "equipment",
-        page: currentPage,
-        limit: itemsPerPage,
-        search: filters.search || undefined,
-        sortBy:
-          sortBy === "featured"
-            ? "name"
-            : sortBy === "price-low"
-            ? "price"
-            : sortBy === "price-high"
-            ? "price"
-            : sortBy,
-        sortOrder: sortBy === "price-high" ? "desc" : "asc",
-      });
-    }
-  }, [currentPage, itemsPerPage, filters.search, sortBy]);
-
-  // Apply filters and search
-  // Default sortBy stays "featured" but featured filter remains off unless user enables it
-
-  // Re-fetch from backend when any filter or pagination changes
-  useEffect(() => {
-    if (backendProducts.length > 0) {
-      refetch({
-        category: "equipment",
-        page: currentPage,
-        limit: itemsPerPage,
-        search: filters.search || undefined,
-        //brand: filters.brand || undefined,
-        //priceRange: filters.priceRange || undefined,
-        sortBy:
-          sortBy === "featured"
-            ? "name"
-            : sortBy === "price-low"
-            ? "price"
-            : sortBy === "price-high"
-            ? "price"
-            : sortBy,
-        sortOrder: sortBy === "price-high" ? "desc" : "asc",
-      });
-    }
-  }, [
-    currentPage,
-    itemsPerPage,
-    filters.search,
-    filters.category,
-    filters.brand,
-    filters.priceRange,
-    filters.inStock,
-    filters.onSale,
-    filters.featured,
-    sortBy,
-  ]);
+    refetch({
+      category: "equipment",
+      page: currentPage,
+      limit: itemsPerPage,
+      search: filters.search || undefined,
+      brand: filters.brand || undefined,
+      categoryFilter: filters.category || undefined,
+      minPrice: filters.priceRange?.split("-")[0],
+      maxPrice: filters.priceRange?.split("-")[1],
+      inStock: filters.inStock || undefined,
+      onSale: filters.onSale || undefined,
+      featured: filters.featured || undefined,
+      sortBy:
+        sortBy === "featured"
+          ? "name"
+          : sortBy === "price-low"
+          ? "price"
+          : sortBy === "price-high"
+          ? "price"
+          : sortBy,
+      sortOrder: sortBy === "price-high" ? "desc" : "asc",
+    });
+  }, [filters, currentPage, itemsPerPage, sortBy]);
 
   // Apply filters (frontend fallback)
   const filteredEquipment = useMemo(() => {
@@ -287,8 +255,9 @@ export function BrewingEquipmentPage({
     setCurrentPage(1); // Reset to first page when filters change
   };
 
+  // 2️⃣ Clear Filters with immediate refetch
   const clearFilters = () => {
-    setFilters({
+    const defaultFilters: FilterState = {
       search: "",
       category: "",
       brand: "",
@@ -296,8 +265,33 @@ export function BrewingEquipmentPage({
       inStock: false,
       onSale: false,
       featured: false,
-    });
+    };
+    setFilters(defaultFilters);
     setCurrentPage(1);
+
+    // Optional: Immediate backend refetch to ensure page 1 loads fresh
+    refetch({
+      category: "equipment",
+      page: 1,
+      limit: itemsPerPage,
+      search: undefined,
+      brand: undefined,
+      categoryFilter: undefined,
+      minPrice: undefined,
+      maxPrice: undefined,
+      inStock: undefined,
+      onSale: undefined,
+      featured: undefined,
+      sortBy:
+        sortBy === "featured"
+          ? "name"
+          : sortBy === "price-low"
+          ? "price"
+          : sortBy === "price-high"
+          ? "price"
+          : sortBy,
+      sortOrder: sortBy === "price-high" ? "desc" : "asc",
+    });
   };
 
   const hasActiveFilters = Object.values(filters).some((value) =>
@@ -596,7 +590,7 @@ export function BrewingEquipmentPage({
                   </Select>
 
                   {/* Filter Toggle */}
-                  <Button
+                  {/* <Button
                     variant="outline"
                     onClick={() => setShowFilters(!showFilters)}
                     className="md:w-auto"
@@ -608,7 +602,7 @@ export function BrewingEquipmentPage({
                         !
                       </Badge>
                     )}
-                  </Button>
+                  </Button> */}
                 </div>
 
                 {/* Expandable Filters */}

@@ -43,9 +43,12 @@ import {
   Coffee,
   Search,
   Filter,
+  X,
 } from "lucide-react";
 import { toast } from "sonner";
 import { ImageWithFallback } from "../../figma/ImageWithFallback";
+import { uploadImage } from "@/utils/imagefunctions";
+import { Pagination } from "@/components/ui/pagination-custom";
 
 interface Product {
   id: string;
@@ -75,6 +78,9 @@ export function AdminProductManagement() {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 50; // adjust as needed
 
   const [formData, setFormData] = useState<Partial<Product>>({
     name: "",
@@ -205,6 +211,35 @@ export function AdminProductManagement() {
     }
   };
 
+  const handleImageUpload = async (file: File, productId: string) => {
+    try {
+      setUploading(true);
+
+      const oldPath = formData.image;
+
+      const { data, error: uploadError } = await uploadImage(
+        file,
+        "products",
+        productId
+      );
+
+      if (uploadError || !data) {
+        toast.error("Failed to upload image");
+        return;
+      }
+
+      // Save into form data
+      setFormData((prev) => ({ ...prev, image: data.publicUrl }));
+
+      toast.success("Image uploaded successfully!");
+    } catch (error) {
+      console.error(error);
+      toast.error("Image upload failed");
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const resetForm = () => {
     setFormData({
       name: "",
@@ -250,6 +285,20 @@ export function AdminProductManagement() {
       categoryFilter === "all" || product.category === categoryFilter;
     return matchesSearch && matchesCategory;
   });
+
+  const totalItems = filteredProducts.length;
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+  const safeCurrentPage = Math.min(currentPage, totalPages) || 1;
+
+  const paginatedProducts = filteredProducts.slice(
+    (safeCurrentPage - 1) * itemsPerPage,
+    safeCurrentPage * itemsPerPage
+  );
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, categoryFilter]);
 
   if (loading) {
     return (
@@ -377,16 +426,51 @@ export function AdminProductManagement() {
                   </div>
                 </div>
 
-                <div>
-                  <Label htmlFor="image">Image URL</Label>
+                <div className="space-y-2">
+                  <Label>Product Image</Label>
+
+                  {formData.image ? (
+                    <div className="relative w-32 h-32">
+                      <img
+                        src={formData.image}
+                        alt="Preview"
+                        className="w-32 h-32 object-cover rounded-lg border"
+                      />
+                      <button
+                        className="absolute -top-2 -right-2 bg-red-600 text-white p-1 rounded-full"
+                        onClick={() => {
+                          setFormData({ ...formData, image: "" });
+                        }}
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">
+                      No image selected
+                    </p>
+                  )}
+
                   <Input
-                    id="image"
-                    value={formData.image}
-                    onChange={(e) =>
-                      setFormData({ ...formData, image: e.target.value })
-                    }
-                    placeholder="Enter image URL"
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        // temporary preview
+                        handleImageUpload(
+                          file,
+                          selectedProduct?.id || "product"
+                        );
+                      }
+                    }}
                   />
+
+                  {uploading && (
+                    <p className="text-sm text-blue-600 font-medium">
+                      Uploading...
+                    </p>
+                  )}
                 </div>
               </TabsContent>
 
@@ -564,7 +648,7 @@ export function AdminProductManagement() {
       {/* Products Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Products ({filteredProducts.length})</CardTitle>
+          <CardTitle>Products ({paginatedProducts.length})</CardTitle>
           <CardDescription>Manage your product inventory</CardDescription>
         </CardHeader>
         <CardContent>
@@ -580,7 +664,7 @@ export function AdminProductManagement() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredProducts.map((product) => (
+              {paginatedProducts.map((product) => (
                 <TableRow key={product.id}>
                   <TableCell>
                     <div className="flex items-center space-x-3">
@@ -655,6 +739,19 @@ export function AdminProductManagement() {
               ))}
             </TableBody>
           </Table>
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="mt-4">
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={(page) => setCurrentPage(page)}
+                showInfo={true}
+                totalItems={totalItems}
+                itemsPerPage={itemsPerPage}
+              />
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

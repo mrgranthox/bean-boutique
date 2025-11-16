@@ -48,6 +48,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { get } from "http";
+import { Pagination } from "@/components/ui/pagination-custom";
 
 interface SubscriptionPlan {
   id: string;
@@ -105,6 +106,8 @@ export function AdminSubscriptionManagement() {
   );
   const [isEditing, setIsEditing] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 50;
 
   const [planFormData, setPlanFormData] = useState<Partial<SubscriptionPlan>>({
     name: "",
@@ -280,6 +283,20 @@ export function AdminSubscriptionManagement() {
 
     return matchesSearch && matchesStatus;
   });
+
+  const totalItems = filteredSubscriptions.length;
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+  const safeCurrentPage = Math.min(currentPage, totalPages) || 1;
+
+  const paginatedSubscriptions = filteredSubscriptions.slice(
+    (safeCurrentPage - 1) * itemsPerPage,
+    safeCurrentPage * itemsPerPage
+  );
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, statusFilter]);
 
   if (loading) {
     return (
@@ -731,7 +748,7 @@ export function AdminSubscriptionManagement() {
           <Card>
             <CardHeader>
               <CardTitle>
-                Active Subscriptions ({filteredSubscriptions.length})
+                Active Subscriptions ({paginatedSubscriptions.length})
               </CardTitle>
               <CardDescription>Manage customer subscriptions</CardDescription>
             </CardHeader>
@@ -749,7 +766,7 @@ export function AdminSubscriptionManagement() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredSubscriptions.map((subscription) => (
+                  {paginatedSubscriptions.map((subscription) => (
                     <TableRow key={subscription.id}>
                       <TableCell>
                         <div>
@@ -808,6 +825,19 @@ export function AdminSubscriptionManagement() {
                   ))}
                 </TableBody>
               </Table>
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="mt-4">
+                  <Pagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={(page) => setCurrentPage(page)}
+                    showInfo={true}
+                    totalItems={totalItems}
+                    itemsPerPage={itemsPerPage}
+                  />
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>

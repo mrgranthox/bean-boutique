@@ -45,6 +45,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { log } from "console";
+import { Pagination } from "@/components/ui/pagination-custom";
 
 interface User {
   id: string;
@@ -86,6 +87,8 @@ export function AdminUserManagement() {
   );
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 50;
 
   useEffect(() => {
     loadUsers();
@@ -250,6 +253,20 @@ export function AdminUserManagement() {
     return matchesSearch && matchesRole && matchesStatus;
   });
 
+  const totalItems = filteredUsers.length;
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+  const safeCurrentPage = Math.min(currentPage, totalPages) || 1;
+
+  const paginatedUsers = filteredUsers.slice(
+    (safeCurrentPage - 1) * itemsPerPage,
+    safeCurrentPage * itemsPerPage
+  );
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, roleFilter, statusFilter]);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center p-8">
@@ -383,7 +400,7 @@ export function AdminUserManagement() {
       {/* Users Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Users ({filteredUsers.length})</CardTitle>
+          <CardTitle>Users ({paginatedUsers.length})</CardTitle>
           <CardDescription>
             Manage user accounts and permissions
           </CardDescription>
@@ -402,7 +419,7 @@ export function AdminUserManagement() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredUsers.map((user) => (
+              {paginatedUsers.map((user) => (
                 <TableRow key={user.id}>
                   <TableCell>
                     <div className="flex items-center space-x-3">
@@ -498,6 +515,19 @@ export function AdminUserManagement() {
               ))}
             </TableBody>
           </Table>
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="mt-4">
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={(page) => setCurrentPage(page)}
+                showInfo={true}
+                totalItems={totalItems}
+                itemsPerPage={itemsPerPage}
+              />
+            </div>
+          )}
         </CardContent>
       </Card>
 

@@ -45,10 +45,12 @@ import {
   Clock,
   Search,
   Filter,
+  X,
 } from "lucide-react";
 import { toast } from "sonner";
 import { ImageWithFallback } from "../../figma/ImageWithFallback";
 import { Pagination } from "@/components/ui/pagination-custom";
+import { updateImage, uploadImage } from "@/utils/imagefunctions";
 
 interface Event {
   id: string;
@@ -86,6 +88,7 @@ export function AdminEventManagement() {
   const [isEditing, setIsEditing] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [uploading, setUploading] = useState(false);
 
   const [formData, setFormData] = useState<Partial<Event>>({
     title: "",
@@ -203,6 +206,43 @@ export function AdminEventManagement() {
       } else {
         toast.error("Failed to update order status: Unknown error occurred");
       }
+    }
+  };
+
+  const handleImageUpload = async (file: File) => {
+    try {
+      setUploading(true);
+
+      // Use existing event ID if editing, otherwise generate a temporary one for storage
+      const entityId = selectedEvent?.id || uuidv4();
+
+      // Get old image path if exists
+      const oldPath = formData.image_url;
+
+      // Upload or replace image
+      const { data, error } = oldPath
+        ? await updateImage(file, "events", entityId, oldPath)
+        : await uploadImage(file, "events", entityId);
+
+      if (error || !data) {
+        toast.error("Failed to upload image");
+        return;
+      }
+
+      // Update form data with new public URL
+      setFormData((prev) => ({ ...prev, image_url: data.publicUrl }));
+
+      // If this is a new event, make sure to store the generated entityId
+      if (!selectedEvent?.id) {
+        setFormData((prev) => ({ ...prev, id: entityId }));
+      }
+
+      toast.success("Image uploaded successfully!");
+    } catch (err) {
+      console.error(err);
+      toast.error("Image upload failed");
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -502,18 +542,49 @@ export function AdminEventManagement() {
                 </div>
               </div>
 
-              <div>
-                <Label htmlFor="image">Image URL</Label>
-                <Input
-                  id="image"
-                  value={formData.image_url}
-                  onChange={(e) =>
-                    setFormData({ ...formData, image_url: e.target.value })
-                  }
-                  placeholder="Enter image URL"
-                />
-              </div>
+              <div className="space-y-2">
+                <Label>Product Image</Label>
 
+                {formData.image_url ? (
+                  <div className="relative w-32 h-32">
+                    <img
+                      src={formData.image_url}
+                      alt="Preview"
+                      className="w-32 h-32 object-cover rounded-lg border"
+                    />
+                    <button
+                      className="absolute -top-2 -right-2 bg-red-600 text-white p-1 rounded-full"
+                      onClick={() => {
+                        setFormData({ ...formData, image_url: "" });
+                      }}
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    No image selected
+                  </p>
+                )}
+
+                <Input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      // temporary preview
+                      handleImageUpload(file);
+                    }
+                  }}
+                />
+
+                {uploading && (
+                  <p className="text-sm text-blue-600 font-medium">
+                    Uploading...
+                  </p>
+                )}
+              </div>
               <div>
                 <Label htmlFor="requirements">
                   Requirements (comma-separated)
