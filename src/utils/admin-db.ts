@@ -7,7 +7,7 @@ async function getAuthToken(): Promise<string | null> {
     const { session } = await auth.getSession();
     return session?.access_token || null;
   } catch (error) {
-    console.error("Failed to get auth token:", error);
+    // console.error("Failed to get auth token:", error);
     return null;
   }
 }
@@ -18,16 +18,16 @@ export async function isUserAdmin(): Promise<boolean> {
     const { auth } = await import("./supabase/client");
     const sessionResult = await auth.getSession();
 
-    console.log("📊 Session result:", sessionResult);
+    // console.log("📊 Session result:", sessionResult);
 
     if (sessionResult.error) {
-      console.error("❌ Session error:", sessionResult.error);
+      // console.error("❌ Session error:", sessionResult.error);
       return false;
     }
 
     if (!sessionResult.session?.user?.id) {
-      console.log("❌ No user session found");
-      console.log("Session data:", sessionResult);
+      // console.log("❌ No user session found");
+      // console.log("Session data:", sessionResult);
       return false;
     }
 
@@ -35,29 +35,29 @@ export async function isUserAdmin(): Promise<boolean> {
     const userEmail = sessionResult.session.user.email;
 
     // Query the users table with proper authentication
-    console.log("📊 Querying users table for user ID:", userId);
+    //console.log("📊 Querying users table for user ID:", userId);
     const { data, error } = await supabase
       .from("users")
       .select("role, email, id")
       .eq("id", userId)
       .maybeSingle(); // Use maybeSingle instead of single to handle missing records better
 
-    console.log("📊 Query result - Data:", data, "Error:", error);
+    //console.log("📊 Query result - Data:", data, "Error:", error);
 
     if (error) {
-      console.error("❌ Database error checking admin status:", error);
-      console.error("Error code:", error.code);
-      console.error("Error message:", error.message);
-      console.error("Error hint:", error.hint);
-      console.error("Error details:", JSON.stringify(error, null, 2));
+      // console.error("❌ Database error checking admin status:", error);
+      // console.error("Error code:", error.code);
+      // console.error("Error message:", error.message);
+      // console.error("Error hint:", error.hint);
+      // console.error("Error details:", JSON.stringify(error, null, 2));
       return false;
     }
 
     if (!data) {
-      console.log("❌ No user record found in users table for ID:", userId);
-      console.log(
-        "⚠️ User exists in auth but not in users table. Creating user record..."
-      );
+      // console.log("❌ No user record found in users table for ID:", userId);
+      // console.log(
+      //   "⚠️ User exists in auth but not in users table. Creating user record..."
+      // );
 
       // Try to create the user record if it doesn't exist
       try {
@@ -72,36 +72,36 @@ export async function isUserAdmin(): Promise<boolean> {
           .single();
 
         if (createError) {
-          console.error("❌ Failed to create user record:", createError);
+          // console.error("❌ Failed to create user record:", createError);
           return false;
         }
 
-        console.log("✅ Created user record with role:", newUser?.role);
+        // console.log("✅ Created user record with role:", newUser?.role);
         return newUser?.role === "admin";
       } catch (createErr) {
-        console.error("❌ Exception creating user record:", createErr);
+        //console.error("❌ Exception creating user record:", createErr);
         return false;
       }
     }
 
     const isAdmin = data.role === "admin";
-    console.log(
-      "🔍 Role comparison - data.role:",
-      JSON.stringify(data.role),
-      'Expected: "admin", Match:',
-      isAdmin
-    );
-    console.log(
-      `${isAdmin ? "✅ ADMIN ACCESS GRANTED" : "❌ NOT ADMIN"} - User: ${
-        data.email
-      }, Role: ${data.role}`
-    );
-    console.log("🎯 FINAL RETURN VALUE:", isAdmin);
+    // console.log(
+    //   "🔍 Role comparison - data.role:",
+    //   JSON.stringify(data.role),
+    //   'Expected: "admin", Match:',
+    //   isAdmin
+    // );
+    // console.log(
+    //   `${isAdmin ? "✅ ADMIN ACCESS GRANTED" : "❌ NOT ADMIN"} - User: ${
+    //     data.email
+    //   }, Role: ${data.role}`
+    // );
+    // console.log("🎯 FINAL RETURN VALUE:", isAdmin);
 
     return isAdmin;
   } catch (error) {
-    console.error("❌ Exception while checking admin status:", error);
-    console.error("Exception details:", JSON.stringify(error, null, 2));
+    // console.error("❌ Exception while checking admin status:", error);
+    // console.error("Exception details:", JSON.stringify(error, null, 2));
     return false;
   }
 }

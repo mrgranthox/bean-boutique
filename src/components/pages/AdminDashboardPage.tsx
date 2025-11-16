@@ -96,7 +96,7 @@ export function AdminDashboardPage({ onPageChange }: AdminDashboardPageProps) {
   useEffect(() => {
     const checkAdminStatus = async () => {
       if (!user) {
-        console.log("❌ No user logged in");
+        // console.log("❌ No user logged in");
         setAccessDenied(true);
         setCheckingAdmin(false);
         return;
@@ -104,15 +104,15 @@ export function AdminDashboardPage({ onPageChange }: AdminDashboardPageProps) {
 
       try {
         setCheckingAdmin(true);
-        console.log("🔍 Checking admin access for:", user.email);
+        // console.log("🔍 Checking admin access for:", user.email);
 
         const { isUserAdmin } = await import("../../utils/admin-db");
         const adminStatus = await isUserAdmin();
 
-        console.log("Admin check result:", adminStatus);
+        // console.log("Admin check result:", adminStatus);
 
         if (!adminStatus) {
-          console.log("❌ Access denied - user is not admin");
+          // console.log("❌ Access denied - user is not admin");
           setAccessDenied(true);
           setIsAdmin(false);
           toast.error(
@@ -121,11 +121,11 @@ export function AdminDashboardPage({ onPageChange }: AdminDashboardPageProps) {
           return;
         }
 
-        console.log("✅ Admin access granted");
+        // console.log("✅ Admin access granted");
         setIsAdmin(true);
         setAccessDenied(false);
       } catch (error) {
-        console.error("❌ Failed to check admin status:", error);
+        // console.error("❌ Failed to check admin status:", error);
         setAccessDenied(true);
         toast.error(
           "Failed to verify admin access. Check console for details."
@@ -148,9 +148,9 @@ export function AdminDashboardPage({ onPageChange }: AdminDashboardPageProps) {
       const data = await getDashboardStats();
       setStats(data);
 
-      console.log("✅ Dashboard stats loaded from database:", data);
+      // console.log("✅ Dashboard stats loaded from database:", data);
     } catch (error) {
-      console.error("Failed to load dashboard stats:", error);
+      //console.error("Failed to load dashboard stats:", error);
       toast.error(
         "Failed to load dashboard statistics. Please ensure database is set up."
       );
@@ -211,42 +211,25 @@ export function AdminDashboardPage({ onPageChange }: AdminDashboardPageProps) {
                 >
                   Return to Home
                 </Button>
-                <Button
+                {/* <Button
                   onClick={() => setShowDebugger(!showDebugger)}
                   className="flex-1"
                   variant="secondary"
                 >
                   <Bug className="w-4 h-4 mr-2" />
                   {showDebugger ? "Hide" : "Show"} Debugger
-                </Button>
+                </Button> */}
               </div>
 
               <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 text-sm">
                 <p className="font-medium mb-2">🔧 To grant admin access:</p>
-                <ol className="list-decimal list-inside space-y-1 text-sm">
-                  <li>Open your Supabase project dashboard</li>
-                  <li>Go to the SQL Editor</li>
-                  <li>
-                    Open the{" "}
-                    <code className="bg-amber-100 px-1 rounded">
-                      SET_ADMIN_USER.sql
-                    </code>{" "}
-                    file from this project
-                  </li>
-                  <li>
-                    Replace the email with{" "}
-                    <code className="bg-amber-100 px-1 rounded">
-                      {user?.email || "your email"}
-                    </code>
-                  </li>
-                  <li>Run the SQL script</li>
-                  <li>Sign out and sign back in</li>
-                </ol>
+                <h2 className="list-decimal list-inside space-y-1 text-sm"></h2>
+                <p>Contact Administrator</p>
               </div>
             </CardContent>
           </Card>
 
-          {showDebugger && <AdminAccessDebugger />}
+          {/* {showDebugger && <AdminAccessDebugger />} */}
         </div>
       </div>
     );
