@@ -66,7 +66,7 @@ export async function isUserAdmin(): Promise<boolean> {
           .insert({
             id: userId,
             email: userEmail || "unknown@example.com",
-            role: "user",
+            role: "customer",
           })
           .select("role, email, id")
           .single();
