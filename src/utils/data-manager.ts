@@ -15,6 +15,78 @@ interface CacheEntry<T> {
   source: "backend" | "local";
 }
 
+// High-fidelity fallback catalog to enable graceful offline/recovery operations (Layer 13)
+const LOCAL_FALLBACK_PRODUCTS = [
+  {
+    id: "fallback-1",
+    name: "Ethiopian Yirgacheffe (Offline Fallback)",
+    price: 24.99,
+    image_url: "https://images.unsplash.com/photo-1652248920808-2246c8011c2c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+    description: "Bright and floral single-origin coffee with exceptional complexity and citrus-floral notes.",
+    category: "coffee",
+    origin: "Ethiopia",
+    roast_level: "Light",
+    flavor_notes: ["Citrus", "Floral", "Tea-like", "Bergamot"],
+    processing_method: "Washed",
+    altitude: "1,700-2,200m",
+    rating: 4.8,
+    review_count: 247,
+    stock: 50,
+    featured: true,
+    new: true,
+    bestseller: true
+  },
+  {
+    id: "fallback-2",
+    name: "Colombian Supremo (Offline Fallback)",
+    price: 22.99,
+    image_url: "https://images.unsplash.com/photo-1652248920808-2246c8011c2c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+    description: "Rich and chocolatey medium roast with beautifully balanced caramel and orange acidity.",
+    category: "coffee",
+    origin: "Colombia",
+    roast_level: "Medium",
+    flavor_notes: ["Chocolate", "Caramel", "Nuts", "Orange"],
+    processing_method: "Washed",
+    altitude: "1,200-1,800m",
+    rating: 4.7,
+    review_count: 189,
+    stock: 45,
+    featured: true,
+    new: false,
+    bestseller: true
+  },
+  {
+    id: "fallback-3",
+    name: "Precision Burr Grinder (Offline Fallback)",
+    price: 349.99,
+    image_url: "https://images.unsplash.com/photo-1573066380308-24ff4c273dbc?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+    description: "Professional-grade ceramic burr grinder with 18 settings for ultra-consistent optimal extraction.",
+    category: "equipment",
+    brand: "Bean Boutique Pro",
+    rating: 4.8,
+    review_count: 324,
+    stock: 12,
+    featured: true,
+    new: true,
+    bestseller: true
+  },
+  {
+    id: "fallback-4",
+    name: "Pour Over Dripper Set (Offline Fallback)",
+    price: 79.99,
+    image_url: "https://images.unsplash.com/photo-1621744895572-da8dde3c425a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+    description: "Elegant ceramic dripper combined with borosilicate glass carafe. Excellent manual coffee control.",
+    category: "equipment",
+    brand: "Hario",
+    rating: 4.7,
+    review_count: 256,
+    stock: 20,
+    featured: true,
+    new: false,
+    bestseller: false
+  }
+];
+
 class DataManager {
   private backendAvailable: boolean | null = null;
   private initializationAttempted = false;
@@ -26,7 +98,7 @@ class DataManager {
   constructor(options: DataManagerOptions = {}) {
     this.options = {
       useBackend: true,
-      fallbackToLocal: false, // Disable fallback - show errors instead
+      fallbackToLocal: true, // Enable smart robust offline fallback (Layer 13)
       timeout: env.apiTimeout || 5000,
       cacheEnabled: env.features.enableAdvancedCaching !== false,
       cacheDuration: 300000, // 5 minutes default
@@ -260,8 +332,30 @@ class DataManager {
         return result;
       }
     } catch (error: any) {
-      //console.error("⚠️ Backend product fetch failed:", error.message);
+      console.warn("⚠️ Backend product fetch failed. Recovering with fallback:", error.message);
       this.backendAvailable = false;
+
+      if (this.options.fallbackToLocal) {
+        const filteredProducts = params?.category
+          ? LOCAL_FALLBACK_PRODUCTS.filter(p => p.category === params.category)
+          : LOCAL_FALLBACK_PRODUCTS;
+
+        const result = {
+          products: filteredProducts,
+          pagination: {
+            page: params?.page || 1,
+            limit: params?.limit || 12,
+            total: filteredProducts.length,
+            totalPages: 1,
+            hasNext: false,
+            hasPrev: false,
+          },
+          source: "local" as const,
+        };
+        this.setCache(cacheKey, result, "local");
+        return result;
+      }
+
       throw new Error(
         `Failed to fetch products from backend: ${error.message}`
       );
@@ -301,8 +395,19 @@ class DataManager {
       // Product not found
       return { product: null, source: "backend" as const };
     } catch (error: any) {
-      // console.error("Backend product fetch failed:", error.message);
+      console.warn(`⚠️ Backend product fetch for ${id} failed. Recovering with fallback:`, error.message);
       this.backendAvailable = false;
+
+      if (this.options.fallbackToLocal) {
+        const localProduct = LOCAL_FALLBACK_PRODUCTS.find(p => p.id === id) || null;
+        const result = {
+          product: localProduct,
+          source: "local" as const,
+        };
+        this.setCache(cacheKey, result, "local");
+        return result;
+      }
+
       throw new Error(`Failed to fetch product: ${error.message}`);
     }
   }
@@ -324,10 +429,10 @@ class DataManager {
   }
 }
 
-// Create a singleton instance
+// Create a singleton instance with default fallback enabled (Layer 13)
 export const dataManager = new DataManager({
   useBackend: true,
-  fallbackToLocal: false, // No fallback - show errors instead
+  fallbackToLocal: true, // Auto-recovery fallback enabled
   timeout: 8000, // 8 second timeout
 });
 

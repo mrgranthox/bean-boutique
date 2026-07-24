@@ -6,6 +6,7 @@ import {
   useCallback,
 } from "react";
 import { Navigation } from "./components/Navigation";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 import { HomePage } from "./components/pages/HomePage";
 import { CoffeeSelectionPage } from "./components/pages/CoffeeSelectionPage";
 import { BrewingEquipmentPage } from "./components/pages/BrewingEquipmentPage";
@@ -402,43 +403,45 @@ export default function App() {
   }
 
   return (
-    <AuthContext.Provider value={authContextValue}>
-      <CartContext.Provider value={cartContextValue}>
-        <div className="min-h-screen bg-background">
-          <Navigation
-            currentPage={currentPage}
-            onPageChange={handlePageChange}
-          />
+    <ErrorBoundary>
+      <AuthContext.Provider value={authContextValue}>
+        <CartContext.Provider value={cartContextValue}>
+          <div className="min-h-screen bg-background">
+            <Navigation
+              currentPage={currentPage}
+              onPageChange={handlePageChange}
+            />
 
-          <main>{renderPage()}</main>
+            <main>{renderPage()}</main>
 
-          <Footer onPageChange={handlePageChange} />
+            <Footer onPageChange={handlePageChange} />
 
-          {/* Data Source Indicator */}
-          {/* <DataSourceIndicator /> */}
+            {/* Data Source Indicator */}
+            {/* <DataSourceIndicator /> */}
 
-          {/* OAuth Tools - Only show in development */}
-          {/* {env.features.enableOAuthDebugTools && (
-            <>
-              <OAuthSetupWizard />
-              <OAuthDebugger />
-              <OAuthTroubleshooter />
-            </>
-          )} */}
+            {/* OAuth Tools - Only show in development */}
+            {/* {env.features.enableOAuthDebugTools && (
+              <>
+                <OAuthSetupWizard />
+                <OAuthDebugger />
+                <OAuthTroubleshooter />
+              </>
+            )} */}
 
-          {/* Centered Toast Container */}
-          <Toaster
-            position="bottom-center"
-            toastOptions={{
-              style: {
-                background: "#a8b4c7ff",
-                color: "#bc6406ff",
-                border: "1px solid hsl(var(--border))",
-              },
-            }}
-          />
-        </div>
-      </CartContext.Provider>
-    </AuthContext.Provider>
+            {/* Centered Toast Container */}
+            <Toaster
+              position="bottom-center"
+              toastOptions={{
+                style: {
+                  background: "#a8b4c7ff",
+                  color: "#bc6406ff",
+                  border: "1px solid hsl(var(--border))",
+                },
+              }}
+            />
+          </div>
+        </CartContext.Provider>
+      </AuthContext.Provider>
+    </ErrorBoundary>
   );
 }
