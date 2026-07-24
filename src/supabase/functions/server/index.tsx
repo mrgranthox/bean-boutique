@@ -18,6 +18,152 @@ app.use("/*", cors({
   maxAge: 600,
 }));
 
+// ============================================================================
+// LAYER 9: RATE LIMITING (Sliding Window Store & Edge Compatible Middleware)
+// ============================================================================
+const rateLimitWindowMs = 60000; // 1 minute sliding window
+const maxRequestsPerWindow = 60; // Max 60 requests/minute
+const rateLimitStore = new Map<string, { timestamps: number[] }>();
+
+// Periodic memory leak prevention
+try {
+  setInterval(() => {
+    const now = Date.now();
+    for (const [key, record] of rateLimitStore.entries()) {
+      const validTimestamps = record.timestamps.filter(t => now - t < rateLimitWindowMs);
+      if (validTimestamps.length === 0) {
+        rateLimitStore.delete(key);
+      } else {
+        rateLimitStore.set(key, { timestamps: validTimestamps });
+      }
+    }
+  }, 30000);
+} catch (e) {
+  console.warn("Could not register rate-limiting cleanup interval:", e);
+}
+
+function getClientIdentifier(c: any): string {
+  const ip = c.req.header("cf-connecting-ip") ||
+             c.req.header("x-forwarded-for")?.split(",")[0].trim() ||
+             c.req.header("x-real-ip") ||
+             "anonymous-client";
+  const authHeader = c.req.header("Authorization");
+  if (authHeader && authHeader.startsWith("Bearer ")) {
+    return `${ip}:${authHeader.substring(7, 27)}`;
+  }
+  return ip;
+}
+
+async function rateLimiterMiddleware(c: any, next: any) {
+  if (c.req.method === "OPTIONS") {
+    return await next();
+  }
+
+  const clientId = getClientIdentifier(c);
+  const now = Date.now();
+
+  const record = rateLimitStore.get(clientId) || { timestamps: [] };
+  const activeTimestamps = record.timestamps.filter(t => now - t < rateLimitWindowMs);
+
+  if (activeTimestamps.length >= maxRequestsPerWindow) {
+    console.warn(`[Rate Limit Exceeded] Client ID: ${clientId} at ${c.req.path}`);
+    const retryAfter = Math.ceil((activeTimestamps[0] + rateLimitWindowMs - now) / 1000);
+    return c.json({
+      error: "Too Many Requests",
+      message: `You have exceeded the rate limit of ${maxRequestsPerWindow} requests per minute. Please try again in ${retryAfter} seconds.`,
+      retryAfterSeconds: retryAfter
+    }, 429, {
+      "Retry-After": String(retryAfter)
+    });
+  }
+
+  activeTimestamps.push(now);
+  rateLimitStore.set(clientId, { timestamps: activeTimestamps });
+
+  c.header("X-RateLimit-Limit", String(maxRequestsPerWindow));
+  c.header("X-RateLimit-Remaining", String(maxRequestsPerWindow - activeTimestamps.length));
+
+  await next();
+}
+
+// ============================================================================
+// LAYER 10: CDN & CACHING CONTROL MIDDLEWARE
+// ============================================================================
+async function cacheControlMiddleware(c: any, next: any) {
+  await next();
+
+  if (c.req.method === "OPTIONS" || c.res.status !== 200) {
+    return;
+  }
+
+  const path = c.req.path;
+  const method = c.req.method;
+
+  if (method === "GET") {
+    if (
+      path.endsWith("/products") ||
+      path.endsWith("/events") ||
+      path.endsWith("/blog") ||
+      path.endsWith("/offers") ||
+      path.endsWith("/promotions")
+    ) {
+      c.header("Cache-Control", "public, max-age=60, stale-while-revalidate=30");
+    } else if (path.match(/\/products\/[^/]+$/) || path.match(/\/events\/[^/]+$/)) {
+      c.header("Cache-Control", "public, max-age=120, stale-while-revalidate=60");
+    } else {
+      c.header("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+      c.header("Pragma", "no-cache");
+      c.header("Expires", "0");
+    }
+  } else {
+    c.header("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+    c.header("Pragma", "no-cache");
+    c.header("Expires", "0");
+  }
+}
+
+// ============================================================================
+// LAYER 8: SECURITY HEADERS MIDDLEWARE
+// ============================================================================
+async function securityHeadersMiddleware(c: any, next: any) {
+  await next();
+  c.header("X-Frame-Options", "DENY");
+  c.header("X-Content-Type-Options", "nosniff");
+  c.header("X-XSS-Protection", "1; mode=block");
+  c.header("Referrer-Policy", "strict-origin-when-cross-origin");
+  c.header("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload");
+  c.header("Content-Security-Policy", "default-src 'self'; frame-ancestors 'none'; object-src 'none';");
+}
+
+// Register Global Middlewares
+app.use("*", rateLimiterMiddleware);
+app.use("*", cacheControlMiddleware);
+app.use("*", securityHeadersMiddleware);
+
+// ============================================================================
+// LAYER 2 & LAYER 12: GLOBAL API ERROR & NOT FOUND HANDLERS
+// ============================================================================
+app.onError((err, c) => {
+  const timestamp = new Date().toISOString();
+  const requestId = crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2, 15);
+
+  console.error(`[ERROR] [ID: ${requestId}] [${timestamp}] Unhandled error at ${c.req.method} ${c.req.path}:`, err);
+
+  return c.json({
+    error: "Internal Server Error",
+    message: "An unexpected server-side error occurred. Please try again later.",
+    requestId,
+    timestamp
+  }, 500);
+});
+
+app.notFound((c) => {
+  return c.json({
+    error: "Not Found",
+    message: `The requested resource '${c.req.method} ${c.req.path}' does not exist on this server.`
+  }, 404);
+});
+
 // Middleware to verify user authentication
 async function requireAuth(c: any, next: any) {
   const accessToken = c.req.header('Authorization')?.split(' ')[1];
