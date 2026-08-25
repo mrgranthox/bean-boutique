@@ -2,7 +2,7 @@
 
 > An e-commerce platform and community hub for specialty coffee bean subscriptions, artisanal brewing equipment, workshops, and coffee culture content.
 
-[![Continuous Integration](https://github.com/bean-boutique/bean-boutique/actions/workflows/ci.yml/badge.svg)](https://github.com/bean-boutique/bean-boutique/actions/workflows/ci.yml)
+
 
 ## Table of Contents
 - [Overview](#overview)
@@ -19,8 +19,6 @@
 - [Testing \& Quality Assurance](#testing--quality-assurance)
 - [Deployment](#deployment)
 - [Contributing](#contributing)
-- [License](#license)
-- [Open Questions](#open-questions)
 
 ---
 
@@ -69,26 +67,6 @@ The application combines a React single-page application (SPA) built with Vite a
 ## Architecture
 
 Bean Boutique follows a decoupled Client-Server architecture utilizing serverless edge compute for low latency.
-
-```mermaid
-graph TD
-    Client[React 18 SPA / Vite] -->|HTTPS Requests / JWT Bearer| EdgeFunc[Deno / Supabase Edge Function]
-    Client -->|Direct Auth Operations| SupaAuth[Supabase Auth Engine]
-
-    subgraph Edge Compute Layer (Hono Engine)
-        EdgeFunc --> RateLimit[Sliding-Window Rate Limiter]
-        RateLimit --> SecHeaders[Security & Cache Headers]
-        SecHeaders --> Router[Hono Route Controllers]
-    end
-
-    Router -->|Postgres / Service Role Client| SupaDB[(Supabase PostgreSQL)]
-    Router -->|Auth Token Verification| SupaAuth
-
-    subgraph Resiliency Mechanism
-        Client -.->|Network Outage / Offline Fallback| LocalMockData[Client DataManager / Local Fallback]
-    end
-```
-
 ---
 
 ## Prerequisites
@@ -305,13 +283,10 @@ Contributions are welcome! Please follow these steps to contribute:
 
 ---
 
-## License
-
-No license specified.
 
 ---
 
-## Open Questions
+## Next Step
 
-1. **Email Service Configuration:** User signup currently auto-confirms user emails because an SMTP service is not attached to the Supabase instance. Is an external email service integration (e.g., Resend or SendGrid) planned for production?
-2. **Payment Gateway Integration:** Orders are processed through a simulated checkout payload. Should a payment gateway like Stripe or PayPal be integrated into the Hono API routes?
+1. **Email Service Configuration:** User signup currently auto-confirms user emails because an SMTP service is not attached to the Supabase instance. Is an external email service integration 
+2. **Payment Gateway Integration:** Orders are processed through a simulated checkout payload. 
