@@ -373,7 +373,7 @@ export default function App() {
     updateQuantity: cartHook.updateQuantity,
     removeFromCart: cartHook.removeItem,
     clearCart: cartHook.clearCart,
-    refreshCart: cartHook.refreshCart,
+    refreshCart: async () => { cartHook.refreshCart(); },
     loading: cartHook.loading,
     error: cartHook.error,
   };

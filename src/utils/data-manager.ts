@@ -445,3 +445,5 @@ export async function checkAndInitializeData() {
     error: result.success ? null : result.message,
   };
 }
+
+(dataManager as any).initializeData = dataManager.initializeData.bind(dataManager);

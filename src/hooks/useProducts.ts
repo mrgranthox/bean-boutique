@@ -9,6 +9,12 @@ import { toast } from "sonner";
 interface UseProductsOptions {
   category?: string;
   subcategory?: string;
+  categoryFilter?: string;
+  brand?: string;
+  minPrice?: number | string;
+  maxPrice?: number | string;
+  inStock?: boolean;
+  onSale?: boolean;
   featured?: boolean;
   page?: number;
   limit?: number;

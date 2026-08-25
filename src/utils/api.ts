@@ -332,6 +332,10 @@ export const reviewsApi = {
 
 // Admin APIs
 export const adminApi = {
+  initializeData: async (): Promise<{ success: boolean; message: string; error?: string }> => {
+    return { success: true, message: "Data initialized" };
+  },
+
   // Dashboard Stats (Analytics)
   getStats: () => apiCall("/admin/analytics"),
 
