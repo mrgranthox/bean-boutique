@@ -245,12 +245,17 @@ export async function initiateOAuthLogin(
 
       let userFriendlyError = `${provider} sign-in failed. Please try again.`;
 
-      if (error.message.includes("not enabled")) {
-        userFriendlyError = `${provider} sign-in is not available. Please contact support.`;
-      } else if (error.message.includes("refused to connect")) {
-        userFriendlyError = `${provider} connection was refused. This may be due to configuration issues.`;
-      } else if (error.message.includes("popup_closed")) {
-        userFriendlyError = "Sign-in was cancelled.";
+      const msg = error.message ? error.message.toLowerCase() : "";
+      if (msg.includes("not enabled") || msg.includes("provider is disabled")) {
+        userFriendlyError = `${provider} sign-in is currently not enabled in backend authentication settings.`;
+      } else if (msg.includes("refused to connect") || msg.includes("network")) {
+        userFriendlyError = `Connection to ${provider} failed. Please check your internet connection and try again.`;
+      } else if (msg.includes("popup_closed") || msg.includes("user_cancelled") || msg.includes("canceled")) {
+        userFriendlyError = "Sign-in process was cancelled.";
+      } else if (msg.includes("redirect_uri_mismatch")) {
+        userFriendlyError = `${provider} sign-in failed due to redirect URL mismatch configuration.`;
+      } else if (error.message) {
+        userFriendlyError = `${provider} sign-in error: ${error.message}`;
       }
 
       return {
