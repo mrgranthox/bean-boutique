@@ -57,7 +57,7 @@ export async function checkAndInitializeData() {
       return await initializeAppData();
     }
   } catch (error) {
-    if (error.name === 'AbortError') {
+    if (error instanceof Error && error.name === 'AbortError') {
       console.warn('Data check timed out, continuing without backend for now');
       return { success: true, message: 'Backend not available, using local data' };
     }

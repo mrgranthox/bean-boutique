@@ -6,7 +6,7 @@ import {
 } from "../utils/database-service";
 import { toast } from "sonner";
 
-interface UseProductsOptions {
+export interface UseProductsOptions {
   category?: string;
   subcategory?: string;
   featured?: boolean;
@@ -15,6 +15,12 @@ interface UseProductsOptions {
   search?: string;
   sortBy?: string;
   sortOrder?: "asc" | "desc";
+  brand?: string;
+  categoryFilter?: string;
+  minPrice?: string | number;
+  maxPrice?: string | number;
+  inStock?: boolean;
+  onSale?: boolean;
 }
 
 export function useProducts(options: UseProductsOptions = {}) {
