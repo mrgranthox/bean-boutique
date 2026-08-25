@@ -75,7 +75,7 @@ interface CartContextType {
   updateQuantity: (productId: string, quantity: number) => Promise<boolean>;
   removeFromCart: (productId: string) => Promise<boolean>;
   clearCart: () => void;
-  refreshCart: () => Promise<void>;
+  refreshCart: () => void | Promise<void>;
   loading: boolean;
   error: string | null;
 }
@@ -372,8 +372,8 @@ export default function App() {
     addSubscriptionToCart: cartHook.addSubscriptionToCart,
     updateQuantity: cartHook.updateQuantity,
     removeFromCart: cartHook.removeItem,
-    clearCart: cartHook.clearCart,
-    refreshCart: cartHook.refreshCart,
+    clearCart: () => cartHook.clearCart(),
+    refreshCart: () => cartHook.refreshCart(),
     loading: cartHook.loading,
     error: cartHook.error,
   };

@@ -392,6 +392,12 @@ export const adminApi = {
       body: updates,
       requireAuth: true,
     }),
+
+  initializeData: () =>
+    apiCall("/admin/initialize-data", {
+      method: "POST",
+      requireAuth: true,
+    }),
 };
 
 // Profile APIs
