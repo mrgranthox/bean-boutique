@@ -50,25 +50,23 @@ export function AuthModal({ trigger, onAuthSuccess }: AuthModalProps) {
       );
 
       if (error) {
-        if (error instanceof Error) {
-          if (error.message && error.message.includes("already exists")) {
-            toast.error(
-              "This email is already registered. Please sign in instead.",
-              {
-                duration: 4000,
-                action: {
-                  label: "Sign In",
-                  onClick: () => setActiveTab("signin"),
-                },
-              }
-            );
-            setTimeout(() => setActiveTab("signin"), 2000);
-            return;
-          }
-          toast.error(error.message || "Signup failed");
+        const errorMsg = error instanceof Error ? error.message : (typeof error === 'object' && error !== null && 'message' in error ? String((error as any).message) : String(error));
+        if (errorMsg && (errorMsg.includes("already exists") || errorMsg.includes("already registered") || errorMsg.includes("email_exists"))) {
+          toast.error(
+            "This email is already registered. Please sign in instead.",
+            {
+              duration: 4000,
+              action: {
+                label: "Sign In",
+                onClick: () => setActiveTab("signin"),
+              },
+            }
+          );
+          setTimeout(() => setActiveTab("signin"), 1500);
           return;
         }
-        toast.error("An unknown error occurred during signup.");
+        toast.error(errorMsg || "Signup failed. Please try again.");
+        return;
       }
 
       if (data?.user) {
@@ -100,27 +98,31 @@ export function AuthModal({ trigger, onAuthSuccess }: AuthModalProps) {
       );
 
       if (error) {
-        if (error instanceof Error) {
-          if (
-            error.message &&
-            (error.message.includes("Invalid login") ||
-              error.message.includes("credentials"))
-          ) {
-            toast.error("Incorrect email or password. Please try again.");
-          } else if (error.message && error.message.includes("not found")) {
-            toast.error(
-              "No account found with this email. Please sign up first.",
-              {
-                duration: 4000,
-                action: {
-                  label: "Sign Up",
-                  onClick: () => setActiveTab("signup"),
-                },
-              }
-            );
-          } else {
-            toast.error(error.message || "Sign in failed");
-          }
+        const errorMsg = error instanceof Error ? error.message : (typeof error === 'object' && error !== null && 'message' in error ? String((error as any).message) : String(error));
+        if (
+          errorMsg &&
+          (errorMsg.includes("Invalid login") ||
+            errorMsg.includes("credentials") ||
+            errorMsg.includes("invalid_grant"))
+        ) {
+          toast.error("Incorrect email or password. Please try again.");
+        } else if (
+          errorMsg &&
+          (errorMsg.includes("not found") || errorMsg.includes("User not found"))
+        ) {
+          toast.error(
+            "No account found with this email. Please sign up first.",
+            {
+              duration: 4000,
+              action: {
+                label: "Sign Up",
+                onClick: () => setActiveTab("signup"),
+              },
+            }
+          );
+          setTimeout(() => setActiveTab("signup"), 1500);
+        } else {
+          toast.error(errorMsg || "Sign in failed. Please check your details.");
         }
         return;
       }
